@@ -13,7 +13,17 @@ app.get("/ride", (req, res) => {
 
   // Find nearest driver to pickup
   for (let driver of drivers) {
-    const result = dijkstra(driver.location, pickup);
+   for (let driver of drivers) {
+  const result = dijkstra(driver.location, pickup);
+
+  // simple AI score (distance based)
+  const score = result.distance;
+
+  if (score < minDistance) {
+    minDistance = score;
+    nearestDriver = driver;
+  }
+}
 
     if (result.distance < minDistance) {
       minDistance = result.distance;
