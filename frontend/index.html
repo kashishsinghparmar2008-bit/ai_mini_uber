@@ -1,10 +1,60 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Mini Uber</title>
+  <title>AI Mini Uber</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      width: 350px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background: black;
+      color: white;
+      border: none;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    pre {
+      background: #eee;
+      padding: 10px;
+      margin-top: 10px;
+    }
+  </style>
 </head>
 <body>
-  <h1>🚖 Mini Uber Project</h1>
-  <p>Hackathon ride-sharing demo</p>
+
+<div class="card">
+  <h2>🚖 AI Mini Uber</h2>
+  <button onclick="bookRide()">Book Ride</button>
+  <pre id="output">Click button to book ride</pre>
+</div>
+
+<script>
+async function bookRide() {
+  const res = await fetch("https://ai-mini-uber.onrender.com/ride");
+  const data = await res.json();
+
+  document.getElementById("output").innerText =
+    "Pickup: " + data.pickup + "\n" +
+    "Drop: " + data.drop + "\n" +
+    "Driver: " + data.assignedDriver + "\n" +
+    "Path: " + data.path.join(" → ") + "\n" +
+    "Distance: " + data.rideDistance;
+}
+</script>
+
 </body>
 </html>
