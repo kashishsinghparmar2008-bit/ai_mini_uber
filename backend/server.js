@@ -37,6 +37,10 @@ if (score < minDistance) {
     }
 
     const rideRoute = dijkstra(pickup, drop);
+// AI-based fare prediction
+const baseFare = 40;
+const perKmRate = 12;
+const fare = baseFare + rideRoute.distance * perKmRate;
 
     res.json({
       pickup,
@@ -45,7 +49,8 @@ if (score < minDistance) {
       driverFrom: nearestDriver.location,
       driverDistance: minDistance,
       rideDistance: rideRoute.distance,
-      path: rideRoute.path
+      path: rideRoute.path,
+      fare: fare
     });
 
   } catch (error) {
