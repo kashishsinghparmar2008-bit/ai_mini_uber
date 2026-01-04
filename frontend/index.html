@@ -46,14 +46,15 @@
 async function bookRide() {
   const res = await fetch("https://ai-mini-uber.onrender.com/ride");
   const data = await res.json();
-
-  document.getElementById("output").innerText =
-    "Pickup: " + data.pickup + "\n" +
-    "Drop: " + data.drop + "\n" +
-    "Driver: " + data.assignedDriver + "\n" +
-    "Path: " + data.path.join(" → ") + "\n" +
-    "Distance: " + data.rideDistance;
+document.getElementById("output").innerText =
+  "Pickup: " + data.pickup + "\n" +
+  "Drop: " + data.drop + "\n" +
+  "Driver: " + data.assignedDriver + "\n" +
+  "Path: " + data.path.join(" → ") + "\n" +
+  "Distance: " + data.rideDistance + " km\n" +
+  "Fare: ₹" + Math.round(data.fare);
 }
+ 
 </script>
 
 </body>
