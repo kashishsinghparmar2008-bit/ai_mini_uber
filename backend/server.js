@@ -47,8 +47,19 @@ let trafficMultiplier = 1;
 
 if (trafficLevel === "MEDIUM") trafficMultiplier = 1.2;
 if (trafficLevel === "HIGH") trafficMultiplier = 1.5;
+// Time-based surge pricing (AI logic)
+const hour = new Date().getHours();
+let surgeMultiplier = 1;
 
-const fare = (baseFare + rideRoute.distance * perKmRate) * trafficMultiplier;
+// Peak hours: 8–10 AM, 6–9 PM
+if ((hour >= 8 && hour <= 10) || (hour >= 18 && hour <= 21)) {
+  surgeMultiplier = 1.3;
+}
+    const fare =
+  (baseFare + rideRoute.distance * perKmRate) *
+  trafficMultiplier *
+  surgeMultiplier;
+
 
 
     res.json({
