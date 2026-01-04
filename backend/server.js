@@ -40,7 +40,16 @@ if (score < minDistance) {
 // AI-based fare prediction
 const baseFare = 40;
 const perKmRate = 12;
-const fare = baseFare + rideRoute.distance * perKmRate;
+    // Traffic simulation (AI logic)
+const trafficLevel = "HIGH"; // LOW | MEDIUM | HIGH
+
+let trafficMultiplier = 1;
+
+if (trafficLevel === "MEDIUM") trafficMultiplier = 1.2;
+if (trafficLevel === "HIGH") trafficMultiplier = 1.5;
+
+const fare = (baseFare + rideRoute.distance * perKmRate) * trafficMultiplier;
+
 
     res.json({
       pickup,
