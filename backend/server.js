@@ -4,14 +4,14 @@ const drivers = require("./drivers");
 
 const app = express();
 
-// Test route
 app.get("/ride", (req, res) => {
-  const pickup = "D"; // passenger pickup point
+  const pickup = "A";   // passenger pickup
+  const drop = "D";     // passenger drop
 
   let nearestDriver = null;
   let minDistance = Infinity;
 
-  // Find nearest driver
+  // Find nearest driver to pickup
   for (let driver of drivers) {
     const result = dijkstra(driver.location, pickup);
 
@@ -21,14 +21,20 @@ app.get("/ride", (req, res) => {
     }
   }
 
+  // Find route from pickup to drop
+  const rideRoute = dijkstra(pickup, drop);
+
   res.json({
-    pickupPoint: pickup,
+    pickup,
+    drop,
     assignedDriver: nearestDriver.name,
-    driverLocation: nearestDriver.location,
-    distanceToPickup: minDistance
+    driverFrom: nearestDriver.location,
+    driverDistance: minDistance,
+    rideDistance: rideRoute.distance,
+    path: rideRoute.path
   });
 });
 
 app.listen(3000, () => {
-  console.log("Mini Uber server running on port 3000");
+  console.log("Mini Uber server running");
 });
