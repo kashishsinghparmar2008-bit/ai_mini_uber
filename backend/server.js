@@ -4,49 +4,57 @@ const drivers = require("./drivers");
 
 const app = express();
 
-app.get("/ride", (req, res) => {
-  const pickup = "A";   // passenger pickup
-  const drop = "D";     // passenger drop
-
-  let nearestDriver = null;
-  let minDistance = Infinity;
-
-  // Find nearest driver to pickup
-  for (let driver of drivers) {
-   for (let driver of drivers) {
-  const result = dijkstra(driver.location, pickup);
-
-  // simple AI score (distance based)
-  const score = result.distance;
-
-  if (score < minDistance) {
-    minDistance = score;
-    nearestDriver = driver;
-  }
-}
-
-    if (result.distance < minDistance) {
-      minDistance = result.distance;
-      nearestDriver = driver;
-    }
-  }
-
-  // Find route from pickup to drop
-  const rideRoute = dijkstra(pickup, drop);
-
-  res.json({
-    pickup,
-    drop,
-    assignedDriver: nearestDriver.name,
-    driverFrom: nearestDriver.location,
-    driverDistance: minDistance,
-    rideDistance: rideRoute.distance,
-    path: rideRoute.path
-  });
+/* Home route */
+app.get("/", (req, res) => {
+  res.send("🚖 AI Mini Uber backend is running. Use /ride");
 });
 
-const PORT = process.env.PORT || 3000;
+/* Ride route */
+app.get("/ride", (req, res) => {
+  try {
+    const pickup = "A";
+    const drop = "D";
 
+    let nearestDriver = null;
+    let minDistance = Infinity;
+
+    // Find nearest driver
+    for (let driver of drivers) {
+      const result = dijkstra(driver.location, pickup);
+
+      if (result.distance < minDistance) {
+        minDistance = result.distance;
+        nearestDriver = driver;
+      }
+    }
+
+    // Safety check
+    if (!nearestDriver) {
+      return res.status(500).json({ error: "No driver found" });
+    }
+
+    const rideRoute = dijkstra(pickup, drop);
+
+    res.json({
+      pickup,
+      drop,
+      assignedDriver: nearestDriver.name,
+      driverFrom: nearestDriver.location,
+      driverDistance: minDistance,
+      rideDistance: rideRoute.distance,
+      path: rideRoute.path
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      error: "Internal error",
+      message: error.message
+    });
+  }
+});
+
+/* Port for Render */
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log("Mini Uber server running");
 });
