@@ -567,6 +567,11 @@
       offlineBanner.style.display = "block";
     }
   }
+  // simple protection: if user did not come from login, redirect
+  if (document.referrer.indexOf("login.html") === -1) {
+    window.location.href = "login.html";
+  }
+
 </script>
 
 </body>
