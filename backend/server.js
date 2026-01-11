@@ -66,6 +66,8 @@ app.get("/login", (req, res) => {
 app.get("/ride", (req, res) => {
   const pickup = "A";
   const drop = "D";
+  demandModel.addRide(pickup);
+
 
   const rideRoute = dijkstra(pickup, drop);
   const rideDistance = rideRoute.distance;
