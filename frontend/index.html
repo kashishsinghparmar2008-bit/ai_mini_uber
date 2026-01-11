@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>AI Mini Uber - Map View</title>
 
   <!-- Leaflet CSS -->
@@ -21,35 +22,47 @@
     }
 
     .container {
-      width: 400px;
-      margin: 20px auto;
+      width: 420px;
+      margin: 30px auto;
       background: white;
       padding: 15px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    h2 {
+      margin-bottom: 10px;
     }
 
     #map {
       height: 300px;
       margin-bottom: 10px;
-      border-radius: 8px;
+      border-radius: 10px;
     }
 
     button {
       width: 100%;
-      padding: 10px;
+      padding: 12px;
       background: black;
       color: white;
       border: none;
       cursor: pointer;
-      border-radius: 5px;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+
+    button:hover {
+      background: #333;
     }
 
     pre {
       background: #eee;
       padding: 10px;
       margin-top: 10px;
-      border-radius: 5px;
+      border-radius: 6px;
+      text-align: left;
+      font-size: 14px;
     }
   </style>
 </head>
@@ -63,39 +76,71 @@
 
   <button onclick="bookRide()">Book Ride</button>
 
-  <pre id="output">Click "Book Ride" to see details</pre>
+  <pre id="output">Click "Book Ride" to see ride details</pre>
 </div>
 
 <script>
-  // 1. Create map (Delhi location as example)
-  const map = L.map('map').setView([28.6139, 77.2090], 13);
+  // =========================
+  // 1. Create the map
+  // =========================
+  const map = L.map('map').setView([28.6139, 77.2090], 13); // Delhi
 
-  // 2. Load map tiles
+  // =========================
+  // 2. Load OpenStreetMap tiles
+  // =========================
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
   }).addTo(map);
 
-  // 3. Pickup and Drop markers
+  // =========================
+  // 3. Pickup & Drop Locations
+  // =========================
   const pickupLocation = [28.6139, 77.2090]; // Connaught Place
-  const dropLocation = [28.6200, 77.2300];   // Nearby area
+  const dropLocation = [28.6200, 77.2300];   // Nearby location
 
-  const pickupMarker = L.marker(pickupLocation).addTo(map).bindPopup("Pickup");
-  const dropMarker = L.marker(dropLocation).addTo(map).bindPopup("Drop");
+  // =========================
+  // 4. Markers
+  // =========================
+  const pickupMarker = L.marker(pickupLocation)
+    .addTo(map)
+    .bindPopup("📍 Pickup Location")
+    .openPopup();
 
-  // 4. Book Ride function
+  const dropMarker = L.marker(dropLocation)
+    .addTo(map)
+    .bindPopup("🏁 Drop Location");
+
+  // =========================
+  // 5. Draw route line
+  // =========================
+  const routeLine = L.polyline([pickupLocation, dropLocation], {
+    color: 'blue',
+    weight: 4
+  }).addTo(map);
+
+  // =========================
+  // 6. Book Ride Function
+  // =========================
   async function bookRide() {
-    const res = await fetch("https://ai-mini-uber.onrender.com/ride");
-    const data = await res.json();
+    try {
+      const res = await fetch("https://ai-mini-uber.onrender.com/ride");
+      const data = await res.json();
 
-    document.getElementById("output").innerText =
-      "Pickup: " + data.pickup + "\n" +
-      "Drop: " + data.drop + "\n" +
-      "Driver: " + data.assignedDriver + "\n" +
-      "Path: " + data.path.join(" → ") + "\n" +
-      "Distance: " + data.rideDistance + " km\n" +
-      "Fare: ₹" + Math.round(data.fare);
+      document.getElementById("output").innerText =
+        "Pickup: " + data.pickup + "\n" +
+        "Drop: " + data.drop + "\n" +
+        "Driver: " + data.assignedDriver + "\n" +
+        "Driver From: " + data.driverFrom + "\n" +
+        "Path: " + data.path.join(" → ") + "\n" +
+        "Distance: " + data.rideDistance + " km\n" +
+        "Fare: ₹" + Math.round(data.fare);
+
+    } catch (error) {
+      document.getElementById("output").innerText = "Error fetching ride data.";
+    }
   }
 </script>
 
 </body>
 </html>
+
