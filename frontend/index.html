@@ -17,7 +17,7 @@
       padding: 0;
       font-family: "Segoe UI", Tahoma, sans-serif;
       background: #f1f3f6;
-      transition: background 0.3s ease;
+      transition: 0.3s;
     }
 
     body.dark {
@@ -25,14 +25,49 @@
       color: #e5e7eb;
     }
 
+    /* LOGIN */
+    .login-screen {
+      max-width: 360px;
+      margin: 70px auto;
+      background: white;
+      padding: 22px;
+      border-radius: 14px;
+      text-align: center;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      animation: fadeIn 0.6s ease;
+    }
+
+    body.dark .login-screen {
+      background: #1e293b;
+    }
+
+    .login-screen input {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    .login-screen button {
+      width: 100%;
+      padding: 10px;
+      background: black;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    /* APP */
     .app-container {
       max-width: 420px;
       margin: 20px auto;
-      background: #ffffff;
+      background: white;
       border-radius: 16px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
       overflow: hidden;
-      animation: fadeIn 0.8s ease;
+      animation: fadeIn 0.6s ease;
     }
 
     body.dark .app-container {
@@ -45,29 +80,23 @@
     }
 
     .header {
-      background: linear-gradient(135deg, #000000, #333333);
+      background: linear-gradient(135deg, #000, #333);
       color: white;
       padding: 16px;
       text-align: center;
       position: relative;
     }
 
-    .header h2 {
-      margin: 0;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-    }
-
     .toggle {
       position: absolute;
-      top: 14px;
-      right: 14px;
-      cursor: pointer;
-      font-size: 14px;
-      background: #ffffff;
-      color: #000;
+      top: 12px;
+      right: 12px;
+      background: white;
+      color: black;
       padding: 4px 10px;
       border-radius: 20px;
+      font-size: 12px;
+      cursor: pointer;
     }
 
     #map {
@@ -76,45 +105,114 @@
     }
 
     .content {
-      padding: 16px;
+      padding: 14px;
     }
 
     .row {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       font-size: 14px;
     }
 
-    .label { color: #555; }
-    body.dark .label { color: #cbd5e1; }
-
-    .value { font-weight: 600; }
-
     .badge {
-      padding: 4px 10px;
-      border-radius: 20px;
       background: #fee2e2;
       color: #991b1b;
+      padding: 3px 8px;
+      border-radius: 20px;
       font-size: 12px;
+    }
+
+    .surge {
+      background: #dc2626;
+      color: white;
+      padding: 3px 8px;
+      border-radius: 20px;
+      font-size: 12px;
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+
+    .driver-card {
+      margin-top: 10px;
+      padding: 10px;
+      background: #f3f4f6;
+      border-radius: 10px;
+      font-size: 13px;
+    }
+
+    body.dark .driver-card {
+      background: #334155;
+    }
+
+    .ai-box {
+      margin-top: 10px;
+      padding: 10px;
+      background: #e0e7ff;
+      border-radius: 10px;
+      font-size: 13px;
+      color: #1e3a8a;
+    }
+
+    body.dark .ai-box {
+      background: #1e40af;
+      color: #e0e7ff;
     }
 
     button {
       width: 100%;
       padding: 12px;
-      margin-top: 12px;
-      background: #000000;
+      margin-top: 10px;
+      background: black;
       color: white;
       border: none;
       border-radius: 8px;
       cursor: pointer;
       font-size: 16px;
-      transition: background 0.3s ease, transform 0.2s ease;
+      transition: 0.3s;
     }
 
     button:hover {
-      background: #333333;
-      transform: scale(1.02);
+      background: #333;
+      transform: scale(1.03);
+    }
+
+    .status {
+      text-align: center;
+      font-size: 13px;
+      margin-top: 8px;
+      color: #2563eb;
+    }
+
+    .dashboard {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      margin-bottom: 8px;
+      color: #444;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: black;
+      color: white;
+      padding: 10px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      opacity: 0;
+      transition: 0.3s;
+    }
+
+    .toast.show {
+      opacity: 1;
     }
 
     .footer {
@@ -123,59 +221,22 @@
       font-size: 12px;
       color: #888;
       background: #fafafa;
-      border-top: 1px solid #eee;
     }
 
     body.dark .footer {
       background: #1e293b;
       color: #94a3b8;
-      border-top: 1px solid #334155;
     }
 
-    /* LOGIN SCREEN */
-    .login-screen {
-      max-width: 360px;
-      margin: 60px auto;
-      background: #ffffff;
-      padding: 20px;
-      border-radius: 14px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-      text-align: center;
-      animation: fadeIn 0.8s ease;
-    }
-
-    body.dark .login-screen {
-      background: #1e293b;
-    }
-
-    .login-screen h2 {
-      margin-bottom: 10px;
-    }
-
-    .login-screen input {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      font-size: 14px;
-    }
-
-    .login-screen button {
-      margin-top: 10px;
-    }
-
-    @media (max-width: 480px) {
-      .app-container {
-        margin: 10px;
-      }
+    @media(max-width:480px) {
+      .app-container { margin: 10px; }
     }
   </style>
 </head>
 
 <body>
 
-<!-- LOGIN SCREEN -->
+<!-- LOGIN -->
 <div class="login-screen" id="loginScreen">
   <h2>🔐 Login</h2>
   <input type="text" id="username" placeholder="Username" />
@@ -184,25 +245,44 @@
   <div id="loginMsg"></div>
 </div>
 
-<!-- MAIN APP -->
+<!-- APP -->
 <div class="app-container" id="appContainer" style="display:none;">
-
   <div class="header">
     <h2>AI Mini Uber</h2>
-    <div class="toggle" onclick="toggleDarkMode()">🌙</div>
+    <div class="toggle" onclick="toggleDark()">🌙</div>
+    <div style="font-size:12px;opacity:0.8;">AI that moves you</div>
   </div>
 
   <div id="map"></div>
 
   <div class="content">
-    <div class="row"><span class="label">Pickup:</span><span class="value" id="pickupText">A</span></div>
-    <div class="row"><span class="label">Drop:</span><span class="value" id="dropText">D</span></div>
-    <div class="row"><span class="label">Driver:</span><span class="value" id="driverText">–</span></div>
-    <div class="row"><span class="label">Distance:</span><span class="value" id="distanceText">– km</span></div>
-    <div class="row"><span class="label">Fare:</span><span class="value" id="fareText">₹ –</span></div>
-    <div class="row"><span class="label">High Demand:</span><span class="badge" id="demandText">–</span></div>
+    <!-- Dashboard -->
+    <div class="dashboard">
+      <span>Total Rides: <b id="totalRides">0</b></span>
+      <span>Avg Fare: ₹ <b id="avgFare">0</b></span>
+    </div>
+
+    <div class="row"><span>Pickup:</span><span id="pickupText">A</span></div>
+    <div class="row"><span>Drop:</span><span id="dropText">D</span></div>
+    <div class="row"><span>Distance:</span><span id="distanceText">– km</span></div>
+    <div class="row"><span>Fare:</span><span id="fareText">₹ –</span></div>
+    <div class="row"><span>High Demand:</span><span class="badge" id="demandText">–</span></div>
+    <div class="row"><span>Surge:</span><span id="surgeText">–</span></div>
+
+    <!-- Driver Card -->
+    <div class="driver-card" id="driverCard">
+      <b>Driver:</b> – <br>
+      ⭐ Rating: 4.8 <br>
+      🚗 Vehicle: DL 01 AB 1234
+    </div>
+
+    <!-- AI Box -->
+    <div class="ai-box" id="aiBox">
+      🤖 AI will explain driver selection here.
+    </div>
 
     <button onclick="bookRide()">Book Ride</button>
+    <div class="status" id="statusText"></div>
   </div>
 
   <div class="footer">
@@ -210,31 +290,42 @@
   </div>
 </div>
 
+<div class="toast" id="toast"></div>
+
+<!-- Sounds -->
+<audio id="clickSound" src="https://assets.mixkit.co/sfx/preview/mixkit-select-click-1109.mp3"></audio>
+<audio id="notifySound" src="https://assets.mixkit.co/sfx/preview/mixkit-bell-notification-933.mp3"></audio>
+
 <script>
-  // DARK MODE
-  function toggleDarkMode() {
+  let map, totalRides = 0, totalFare = 0;
+
+  function toggleDark() {
     document.body.classList.toggle("dark");
   }
 
-  // LOGIN
-  async function login() {
-    const username = document.getElementById("username").value;
-    const password = document.getElementById("password").value;
+  function showToast(msg) {
+    const toast = document.getElementById("toast");
+    toast.innerText = msg;
+    toast.classList.add("show");
+    setTimeout(() => toast.classList.remove("show"), 2500);
+  }
 
-    const res = await fetch(`https://ai-mini-uber.onrender.com/login?username=${username}&password=${password}`);
+  async function login() {
+    const u = username.value;
+    const p = password.value;
+
+    const res = await fetch(`https://ai-mini-uber.onrender.com/login?username=${u}&password=${p}`);
     const data = await res.json();
 
     if (data.success) {
-      document.getElementById("loginScreen").style.display = "none";
-      document.getElementById("appContainer").style.display = "block";
+      loginScreen.style.display = "none";
+      appContainer.style.display = "block";
       initMap();
+      showToast("Login successful!");
     } else {
-      document.getElementById("loginMsg").innerText = "Invalid login!";
+      loginMsg.innerText = "Invalid login!";
     }
   }
-
-  // MAP + HEATMAP
-  let map;
 
   function initMap() {
     map = L.map("map").setView([28.6139, 77.2090], 13);
@@ -243,43 +334,69 @@
       attribution: "© OpenStreetMap"
     }).addTo(map);
 
-    const pickupLocation = [28.6139, 77.2090];
-    const dropLocation = [28.6200, 77.2300];
+    const pickup = [28.6139, 77.2090];
+    const drop = [28.6200, 77.2300];
 
-    L.marker(pickupLocation).addTo(map).bindPopup("📍 Pickup").openPopup();
-    L.marker(dropLocation).addTo(map).bindPopup("🏁 Drop");
+    L.marker(pickup).addTo(map).bindPopup("📍 Pickup");
+    L.marker(drop).addTo(map).bindPopup("🏁 Drop");
 
-    L.polyline([pickupLocation, dropLocation], { color: "#2563eb", weight: 4 }).addTo(map);
+    L.polyline([pickup, drop], { color: "#2563eb", weight: 4 }).addTo(map);
 
     loadHeatmap();
   }
 
-  // BOOK RIDE
   async function bookRide() {
+    document.getElementById("clickSound").play();
+    statusText.innerText = "Searching for driver...";
+
+    setTimeout(() => statusText.innerText = "Driver assigned...", 800);
+    setTimeout(() => statusText.innerText = "On the way...", 1500);
+
     const res = await fetch("https://ai-mini-uber.onrender.com/ride");
     const data = await res.json();
 
-    document.getElementById("pickupText").innerText = data.pickup;
-    document.getElementById("dropText").innerText = data.drop;
-    document.getElementById("driverText").innerText = data.assignedDriver;
-    document.getElementById("distanceText").innerText = data.rideDistance + " km";
-    document.getElementById("fareText").innerText = "₹ " + data.fare;
-    document.getElementById("demandText").innerText = data.highDemandArea || "-";
+    pickupText.innerText = data.pickup;
+    dropText.innerText = data.drop;
+    distanceText.innerText = data.rideDistance + " km";
+    fareText.innerText = "₹ " + data.fare;
+    demandText.innerText = data.highDemandArea || "-";
+
+    driverCard.innerHTML = `<b>Driver:</b> ${data.assignedDriver}<br>⭐ Rating: 4.8<br>🚗 Vehicle: DL 01 AB 1234`;
+
+    aiBox.innerText = `🤖 AI selected ${data.assignedDriver} because he is closest and demand in area ${data.highDemandArea}.`;
+
+    if (data.highDemandArea === data.pickup) {
+      surgeText.innerHTML = '<span class="surge">Surge Active 🔺</span>';
+      showToast("High demand! Surge pricing applied");
+    } else {
+      surgeText.innerText = "No surge";
+    }
+
+    totalRides++;
+    totalFare += data.fare;
+    totalRidesElem = document.getElementById("totalRides");
+    avgFareElem = document.getElementById("avgFare");
+
+    totalRidesElem.innerText = totalRides;
+    avgFareElem.innerText = Math.round(totalFare / totalRides);
+
+    statusText.innerText = "Ride completed ✔️";
+    document.getElementById("notifySound").play();
+    showToast("Driver found & ride booked!");
   }
 
-  // HEATMAP
   async function loadHeatmap() {
     const res = await fetch("https://ai-mini-uber.onrender.com/heatmap");
     const data = await res.json();
 
-    const heatPoints = data.heatmapData.map(loc => {
+    const points = data.heatmapData.map(loc => {
       if (loc === "A") return [28.6139, 77.2090, 0.8];
       if (loc === "B") return [28.6200, 77.2300, 0.8];
       if (loc === "C") return [28.6100, 77.2200, 0.8];
       if (loc === "D") return [28.6250, 77.2150, 0.8];
     });
 
-    L.heatLayer(heatPoints, { radius: 25, blur: 15 }).addTo(map);
+    L.heatLayer(points, { radius: 25, blur: 15 }).addTo(map);
   }
 </script>
 
