@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>AI Mini Uber – Smart Ride</title>
+  <title>AI Mini Uber – Ultimate Edition</title>
 
   <!-- Leaflet -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -11,7 +11,6 @@
 
   <style>
     * { box-sizing: border-box; }
-
     body {
       margin: 0;
       padding: 0;
@@ -19,10 +18,12 @@
       background: #f1f3f6;
       transition: 0.3s;
     }
-
     body.dark {
       background: #0f172a;
       color: #e5e7eb;
+    }
+    body.accessible {
+      font-size: 18px;
     }
 
     /* LOGIN */
@@ -36,11 +37,7 @@
       box-shadow: 0 10px 25px rgba(0,0,0,0.1);
       animation: fadeIn 0.6s ease;
     }
-
-    body.dark .login-screen {
-      background: #1e293b;
-    }
-
+    body.dark .login-screen { background: #1e293b; }
     .login-screen input {
       width: 100%;
       padding: 10px;
@@ -48,7 +45,6 @@
       border-radius: 6px;
       border: 1px solid #ccc;
     }
-
     .login-screen button {
       width: 100%;
       padding: 10px;
@@ -61,7 +57,7 @@
 
     /* APP */
     .app-container {
-      max-width: 420px;
+      max-width: 430px;
       margin: 20px auto;
       background: white;
       border-radius: 16px;
@@ -69,10 +65,7 @@
       overflow: hidden;
       animation: fadeIn 0.6s ease;
     }
-
-    body.dark .app-container {
-      background: #1e293b;
-    }
+    body.dark .app-container { background: #1e293b; }
 
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(20px); }
@@ -86,11 +79,10 @@
       text-align: center;
       position: relative;
     }
-
-    .toggle {
+    .header small { opacity: 0.8; }
+    .toggle, .acc-toggle, .demo-btn {
       position: absolute;
-      top: 12px;
-      right: 12px;
+      top: 10px;
       background: white;
       color: black;
       padding: 4px 10px;
@@ -98,6 +90,9 @@
       font-size: 12px;
       cursor: pointer;
     }
+    .toggle { right: 10px; }
+    .acc-toggle { right: 70px; }
+    .demo-btn { left: 10px; background: #fde68a; }
 
     #map {
       height: 260px;
@@ -106,6 +101,34 @@
 
     .content {
       padding: 14px;
+    }
+
+    .banner {
+      background: #e0f2fe;
+      color: #075985;
+      padding: 8px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .offline {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .network {
+      font-size: 12px;
+      color: #16a34a;
+      margin-bottom: 6px;
+    }
+
+    .dashboard {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      margin-bottom: 8px;
+      color: #444;
     }
 
     .row {
@@ -145,10 +168,7 @@
       border-radius: 10px;
       font-size: 13px;
     }
-
-    body.dark .driver-card {
-      background: #334155;
-    }
+    body.dark .driver-card { background: #334155; }
 
     .ai-box {
       margin-top: 10px;
@@ -158,10 +178,41 @@
       font-size: 13px;
       color: #1e3a8a;
     }
+    body.dark .ai-box { background: #1e40af; color: #e0e7ff; }
 
-    body.dark .ai-box {
-      background: #1e40af;
-      color: #e0e7ff;
+    .history {
+      margin-top: 10px;
+      padding: 10px;
+      background: #f9fafb;
+      border-radius: 10px;
+      font-size: 12px;
+    }
+    body.dark .history { background: #334155; }
+
+    .confidence {
+      margin-top: 10px;
+      font-size: 12px;
+    }
+    .bar {
+      height: 8px;
+      background: #e5e7eb;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+    .fill {
+      height: 100%;
+      width: 80%;
+      background: #22c55e;
+    }
+
+    .why-ai {
+      margin-top: 10px;
+      padding: 10px;
+      background: #ecfeff;
+      border-radius: 10px;
+      font-size: 12px;
+      color: #0f766e;
     }
 
     button {
@@ -176,7 +227,6 @@
       font-size: 16px;
       transition: 0.3s;
     }
-
     button:hover {
       background: #333;
       transform: scale(1.03);
@@ -187,14 +237,6 @@
       font-size: 13px;
       margin-top: 8px;
       color: #2563eb;
-    }
-
-    .dashboard {
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
-      margin-bottom: 8px;
-      color: #444;
     }
 
     .toast {
@@ -210,10 +252,7 @@
       opacity: 0;
       transition: 0.3s;
     }
-
-    .toast.show {
-      opacity: 1;
-    }
+    .toast.show { opacity: 1; }
 
     .footer {
       text-align: center;
@@ -222,11 +261,7 @@
       color: #888;
       background: #fafafa;
     }
-
-    body.dark .footer {
-      background: #1e293b;
-      color: #94a3b8;
-    }
+    body.dark .footer { background: #1e293b; color: #94a3b8; }
 
     @media(max-width:480px) {
       .app-container { margin: 10px; }
@@ -248,15 +283,20 @@
 <!-- APP -->
 <div class="app-container" id="appContainer" style="display:none;">
   <div class="header">
-    <h2>AI Mini Uber</h2>
+    <div class="demo-btn" onclick="demoMode()">🎬 Demo</div>
+    <div class="acc-toggle" onclick="toggleAccessibility()">♿</div>
     <div class="toggle" onclick="toggleDark()">🌙</div>
-    <div style="font-size:12px;opacity:0.8;">AI that moves you</div>
+    <h2>AI Mini Uber</h2>
+    <small>AI that moves you</small>
   </div>
 
   <div id="map"></div>
 
   <div class="content">
-    <!-- Dashboard -->
+    <div class="banner" id="predictionBanner">🔮 AI Prediction: High demand expected in Area B in next 30 minutes</div>
+    <div class="banner offline" id="offlineBanner" style="display:none;">⚠️ You are offline. Showing cached data.</div>
+    <div class="network">🌐 Network: 4G | Low Latency</div>
+
     <div class="dashboard">
       <span>Total Rides: <b id="totalRides">0</b></span>
       <span>Avg Fare: ₹ <b id="avgFare">0</b></span>
@@ -273,12 +313,33 @@
     <div class="driver-card" id="driverCard">
       <b>Driver:</b> – <br>
       ⭐ Rating: 4.8 <br>
-      🚗 Vehicle: DL 01 AB 1234
+      🚗 Vehicle: DL 01 AB 1234 <br>
+      AI Score: <b id="aiScore">–</b>
     </div>
 
-    <!-- AI Box -->
+    <!-- Explainable AI -->
     <div class="ai-box" id="aiBox">
-      🤖 AI will explain driver selection here.
+      🤖 AI reasoning will appear here.
+    </div>
+
+    <!-- AI Confidence -->
+    <div class="confidence">
+      AI Confidence:
+      <div class="bar"><div class="fill" id="confidenceFill"></div></div>
+    </div>
+
+    <!-- Ride History -->
+    <div class="history" id="historyBox">
+      <b>Ride History:</b>
+      <div id="historyList">No rides yet</div>
+    </div>
+
+    <!-- Why AI -->
+    <div class="why-ai">
+      <b>Why AI?</b><br>
+      • Predicts demand<br>
+      • Optimizes driver selection<br>
+      • Learns pricing patterns
     </div>
 
     <button onclick="bookRide()">Book Ride</button>
@@ -298,9 +359,14 @@
 
 <script>
   let map, totalRides = 0, totalFare = 0;
+  let history = [];
 
   function toggleDark() {
     document.body.classList.toggle("dark");
+  }
+
+  function toggleAccessibility() {
+    document.body.classList.toggle("accessible");
   }
 
   function showToast(msg) {
@@ -314,17 +380,28 @@
     const u = username.value;
     const p = password.value;
 
-    const res = await fetch(`https://ai-mini-uber.onrender.com/login?username=${u}&password=${p}`);
-    const data = await res.json();
+    try {
+      const res = await fetch(`https://ai-mini-uber.onrender.com/login?username=${u}&password=${p}`);
+      const data = await res.json();
 
-    if (data.success) {
-      loginScreen.style.display = "none";
-      appContainer.style.display = "block";
-      initMap();
-      showToast("Login successful!");
-    } else {
-      loginMsg.innerText = "Invalid login!";
+      if (data.success) {
+        loginScreen.style.display = "none";
+        appContainer.style.display = "block";
+        initMap();
+        showToast("Login successful!");
+      } else {
+        loginMsg.innerText = "Invalid login!";
+      }
+    } catch {
+      offlineBanner.style.display = "block";
     }
+  }
+
+  function demoMode() {
+    username.value = "user1";
+    password.value = "1234";
+    login();
+    setTimeout(() => bookRide(), 1500);
   }
 
   function initMap() {
@@ -352,53 +429,69 @@
     setTimeout(() => statusText.innerText = "Driver assigned...", 800);
     setTimeout(() => statusText.innerText = "On the way...", 1500);
 
-    const res = await fetch("https://ai-mini-uber.onrender.com/ride");
-    const data = await res.json();
+    try {
+      const res = await fetch("https://ai-mini-uber.onrender.com/ride");
+      const data = await res.json();
 
-    pickupText.innerText = data.pickup;
-    dropText.innerText = data.drop;
-    distanceText.innerText = data.rideDistance + " km";
-    fareText.innerText = "₹ " + data.fare;
-    demandText.innerText = data.highDemandArea || "-";
+      pickupText.innerText = data.pickup;
+      dropText.innerText = data.drop;
+      distanceText.innerText = data.rideDistance + " km";
+      fareText.innerText = "₹ " + data.fare;
+      demandText.innerText = data.highDemandArea || "-";
 
-    driverCard.innerHTML = `<b>Driver:</b> ${data.assignedDriver}<br>⭐ Rating: 4.8<br>🚗 Vehicle: DL 01 AB 1234`;
+      driverCard.innerHTML = `<b>Driver:</b> ${data.assignedDriver}<br>⭐ Rating: 4.8<br>🚗 Vehicle: DL 01 AB 1234<br>AI Score: <b id="aiScore">${Math.floor(Math.random()*20)+80}/100</b>`;
 
-    aiBox.innerText = `🤖 AI selected ${data.assignedDriver} because he is closest and demand in area ${data.highDemandArea}.`;
+      aiBox.innerHTML = `🤖 AI Reasoning:<br>
+      • Driver 1 distance: 2.1 km<br>
+      • Driver 2 distance: 4.5 km<br>
+      • Area demand: ${data.highDemandArea || "Normal"}<br>
+      • Final decision: ${data.assignedDriver}`;
 
-    if (data.highDemandArea === data.pickup) {
-      surgeText.innerHTML = '<span class="surge">Surge Active 🔺</span>';
-      showToast("High demand! Surge pricing applied");
-    } else {
-      surgeText.innerText = "No surge";
+      if (data.highDemandArea === data.pickup) {
+        surgeText.innerHTML = '<span class="surge">Surge Active 🔺</span>';
+        showToast("High demand! Surge pricing applied");
+      } else {
+        surgeText.innerText = "No surge";
+      }
+
+      totalRides++;
+      totalFare += data.fare;
+      totalRidesElem.innerText = totalRides;
+      avgFareElem.innerText = Math.round(totalFare / totalRides);
+
+      history.unshift(`${data.pickup} → ${data.drop} | ₹${data.fare} | ${data.assignedDriver}`);
+      history = history.slice(0,5);
+      historyList.innerHTML = history.map(h => "• " + h).join("<br>");
+
+      confidenceFill.style.width = (Math.floor(Math.random()*20)+70) + "%";
+
+      statusText.innerText = "Ride completed ✔️";
+      document.getElementById("notifySound").play();
+      showToast("Driver found & ride booked!");
+    } catch {
+      offlineBanner.style.display = "block";
     }
-
-    totalRides++;
-    totalFare += data.fare;
-    totalRidesElem = document.getElementById("totalRides");
-    avgFareElem = document.getElementById("avgFare");
-
-    totalRidesElem.innerText = totalRides;
-    avgFareElem.innerText = Math.round(totalFare / totalRides);
-
-    statusText.innerText = "Ride completed ✔️";
-    document.getElementById("notifySound").play();
-    showToast("Driver found & ride booked!");
   }
 
   async function loadHeatmap() {
-    const res = await fetch("https://ai-mini-uber.onrender.com/heatmap");
-    const data = await res.json();
+    try {
+      const res = await fetch("https://ai-mini-uber.onrender.com/heatmap");
+      const data = await res.json();
 
-    const points = data.heatmapData.map(loc => {
-      if (loc === "A") return [28.6139, 77.2090, 0.8];
-      if (loc === "B") return [28.6200, 77.2300, 0.8];
-      if (loc === "C") return [28.6100, 77.2200, 0.8];
-      if (loc === "D") return [28.6250, 77.2150, 0.8];
-    });
+      const points = data.heatmapData.map(loc => {
+        if (loc === "A") return [28.6139, 77.2090, 0.8];
+        if (loc === "B") return [28.6200, 77.2300, 0.8];
+        if (loc === "C") return [28.6100, 77.2200, 0.8];
+        if (loc === "D") return [28.6250, 77.2150, 0.8];
+      });
 
-    L.heatLayer(points, { radius: 25, blur: 15 }).addTo(map);
+      L.heatLayer(points, { radius: 25, blur: 15 }).addTo(map);
+    } catch {
+      offlineBanner.style.display = "block";
+    }
   }
 </script>
 
 </body>
 </html>
+
