@@ -5,7 +5,6 @@ const dijkstra = require("./graph");
 const predictFare = require("./fareModel");
 const demandModel = require("./demandModel");
 
-
 // Drivers
 const drivers = [
   { name: "Driver 1", location: "A" },
@@ -26,19 +25,17 @@ function findNearestDriver(pickup) {
 
   for (let driver of drivers) {
     const result = dijkstra(driver.location, pickup);
-
     if (result.distance < minDistance) {
       minDistance = result.distance;
       nearestDriver = driver;
     }
   }
-
   return nearestDriver;
 }
 
-// ==========================
+// ======================
 // LOGIN ROUTE
-// ==========================
+// ======================
 app.get("/login", (req, res) => {
   const { username, password } = req.query;
 
@@ -47,34 +44,28 @@ app.get("/login", (req, res) => {
   );
 
   if (user) {
-    res.json({
-      success: true,
-      message: "Login successful",
-      user: username
-    });
+    res.json({ success: true, message: "Login successful", user: username });
   } else {
-    res.status(401).json({
-      success: false,
-      message: "Invalid credentials"
-    });
+    res.status(401).json({ success: false, message: "Invalid credentials" });
   }
 });
 
-// ==========================
+// ======================
 // RIDE ROUTE
-// ==========================
+// ======================
 app.get("/ride", (req, res) => {
   const pickup = "A";
   const drop = "D";
-  demandModel.addRide(pickup);
 
+  // Track demand
+  demandModel.addRide(pickup);
 
   const rideRoute = dijkstra(pickup, drop);
   const rideDistance = rideRoute.distance;
 
   const nearestDriver = findNearestDriver(pickup);
 
-  // ML-based fare prediction
+  // ML fare prediction
   const fare = predictFare(rideDistance);
 
   res.json({
@@ -89,12 +80,22 @@ app.get("/ride", (req, res) => {
   });
 });
 
+// ======================
+// HEATMAP DATA ROUTE
+// ======================
+app.get("/heatmap", (req, res) => {
+  res.json({
+    heatmapData: demandModel.getHeatmapData()
+  });
+});
+
 // Home
 app.get("/", (req, res) => {
-  res.send("AI Mini Uber Backend Running with Login + ML Fare");
+  res.send("AI Mini Uber Backend Running with ML, Login & Heatmap");
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log("Mini Uber server running on port", PORT);
 });
+
