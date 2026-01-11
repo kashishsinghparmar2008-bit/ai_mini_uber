@@ -3,6 +3,8 @@ const app = express();
 
 const dijkstra = require("./graph");
 const predictFare = require("./fareModel");
+const demandModel = require("./demandModel");
+
 
 // Drivers
 const drivers = [
