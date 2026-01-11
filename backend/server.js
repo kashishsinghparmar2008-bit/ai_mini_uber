@@ -84,7 +84,8 @@ app.get("/ride", (req, res) => {
     driverFrom: nearestDriver.location,
     rideDistance,
     path: rideRoute.path,
-    fare
+    fare,
+    highDemandArea: demandModel.getHighDemandArea()
   });
 });
 
