@@ -1,23 +1,40 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>AI Mini Uber</title>
+  <title>AI Mini Uber - Map View</title>
+
+  <!-- Leaflet CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
   <style>
     body {
+      margin: 0;
+      padding: 0;
       font-family: Arial, sans-serif;
       background: #f4f6f8;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
     }
-    .card {
+
+    .container {
+      width: 400px;
+      margin: 20px auto;
       background: white;
-      padding: 20px;
+      padding: 15px;
       border-radius: 10px;
-      width: 350px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
+
+    #map {
+      height: 300px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+    }
+
     button {
       width: 100%;
       padding: 10px;
@@ -25,36 +42,59 @@
       color: white;
       border: none;
       cursor: pointer;
-      margin-top: 10px;
+      border-radius: 5px;
     }
+
     pre {
       background: #eee;
       padding: 10px;
       margin-top: 10px;
+      border-radius: 5px;
     }
   </style>
 </head>
+
 <body>
 
-<div class="card">
-  <h2>🚖 AI Mini Uber</h2>
+<div class="container">
+  <h2>🚖 AI Mini Uber (Map View)</h2>
+
+  <div id="map"></div>
+
   <button onclick="bookRide()">Book Ride</button>
-  <pre id="output">Click button to book ride</pre>
+
+  <pre id="output">Click "Book Ride" to see details</pre>
 </div>
 
 <script>
-async function bookRide() {
-  const res = await fetch("https://ai-mini-uber.onrender.com/ride");
-  const data = await res.json();
-document.getElementById("output").innerText =
-  "Pickup: " + data.pickup + "\n" +
-  "Drop: " + data.drop + "\n" +
-  "Driver: " + data.assignedDriver + "\n" +
-  "Path: " + data.path.join(" → ") + "\n" +
-  "Distance: " + data.rideDistance + " km\n" +
-  "Fare: ₹" + Math.round(data.fare);
-}
- 
+  // 1. Create map (Delhi location as example)
+  const map = L.map('map').setView([28.6139, 77.2090], 13);
+
+  // 2. Load map tiles
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+  }).addTo(map);
+
+  // 3. Pickup and Drop markers
+  const pickupLocation = [28.6139, 77.2090]; // Connaught Place
+  const dropLocation = [28.6200, 77.2300];   // Nearby area
+
+  const pickupMarker = L.marker(pickupLocation).addTo(map).bindPopup("Pickup");
+  const dropMarker = L.marker(dropLocation).addTo(map).bindPopup("Drop");
+
+  // 4. Book Ride function
+  async function bookRide() {
+    const res = await fetch("https://ai-mini-uber.onrender.com/ride");
+    const data = await res.json();
+
+    document.getElementById("output").innerText =
+      "Pickup: " + data.pickup + "\n" +
+      "Drop: " + data.drop + "\n" +
+      "Driver: " + data.assignedDriver + "\n" +
+      "Path: " + data.path.join(" → ") + "\n" +
+      "Distance: " + data.rideDistance + " km\n" +
+      "Fare: ₹" + Math.round(data.fare);
+  }
 </script>
 
 </body>
