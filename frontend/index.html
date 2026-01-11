@@ -11,6 +11,75 @@
 
   <style>
     * { box-sizing: border-box; }
+    .bottom-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 430px;
+  background: white;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  box-shadow: 0 -5px 20px rgba(0,0,0,0.15);
+  padding: 12px;
+  animation: slideUp 0.4s ease;
+}
+
+.sheet-handle {
+  width: 40px;
+  height: 5px;
+  background: #ccc;
+  border-radius: 10px;
+  margin: 0 auto 10px;
+}
+
+.sheet-content {
+  padding: 10px;
+}
+
+.location-row {
+  display: flex;
+  align-items: center;
+  background: #f3f4f6;
+  padding: 10px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+
+.location-row input {
+  border: none;
+  background: transparent;
+  margin-left: 10px;
+  width: 100%;
+  font-size: 14px;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.green { background: #22c55e; }
+.red { background: #ef4444; }
+
+.primary-btn {
+  width: 100%;
+  padding: 14px;
+  background: black;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+@keyframes slideUp {
+  from { transform: translate(-50%, 100%); }
+  to { transform: translate(-50%, 0); }
+}
+
 
     body {
       margin: 0;
