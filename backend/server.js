@@ -1,6 +1,7 @@
 const express = require("express");
 const dijkstra = require("./graph");
 const drivers = require("./drivers");
+const predictFare = require("./fareModel");
 
 const app = express();
 
