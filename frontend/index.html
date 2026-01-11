@@ -5,13 +5,13 @@
   <title>AI Mini Uber - Map View</title>
 
   <!-- Leaflet CSS -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Heatmap Plugin -->
+  <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
 
   <style>
     body {
@@ -31,10 +31,6 @@
       text-align: center;
     }
 
-    h2 {
-      margin-bottom: 10px;
-    }
-
     #map {
       height: 300px;
       margin-bottom: 10px;
@@ -52,10 +48,6 @@
       font-size: 16px;
     }
 
-    button:hover {
-      background: #333;
-    }
-
     pre {
       background: #eee;
       padding: 10px;
@@ -70,7 +62,7 @@
 <body>
 
 <div class="container">
-  <h2>🚖 AI Mini Uber (Map View)</h2>
+  <h2>🚖 AI Mini Uber (Map + AI View)</h2>
 
   <div id="map"></div>
 
@@ -81,66 +73,62 @@
 
 <script>
   // =========================
-  // 1. Create the map
+  // MAP SETUP
   // =========================
-  const map = L.map('map').setView([28.6139, 77.2090], 13); // Delhi
+  const map = L.map('map').setView([28.6139, 77.2090], 13);
 
-  // =========================
-  // 2. Load OpenStreetMap tiles
-  // =========================
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
   }).addTo(map);
 
-  // =========================
-  // 3. Pickup & Drop Locations
-  // =========================
-  const pickupLocation = [28.6139, 77.2090]; // Connaught Place
-  const dropLocation = [28.6200, 77.2300];   // Nearby location
+  const pickupLocation = [28.6139, 77.2090];
+  const dropLocation = [28.6200, 77.2300];
 
-  // =========================
-  // 4. Markers
-  // =========================
-  const pickupMarker = L.marker(pickupLocation)
-    .addTo(map)
-    .bindPopup("📍 Pickup Location")
-    .openPopup();
+  L.marker(pickupLocation).addTo(map).bindPopup("📍 Pickup").openPopup();
+  L.marker(dropLocation).addTo(map).bindPopup("🏁 Drop");
 
-  const dropMarker = L.marker(dropLocation)
-    .addTo(map)
-    .bindPopup("🏁 Drop Location");
-
-  // =========================
-  // 5. Draw route line
-  // =========================
   const routeLine = L.polyline([pickupLocation, dropLocation], {
     color: 'blue',
     weight: 4
   }).addTo(map);
 
   // =========================
-  // 6. Book Ride Function
+  // BOOK RIDE
   // =========================
   async function bookRide() {
-    try {
-      const res = await fetch("https://ai-mini-uber.onrender.com/ride");
-      const data = await res.json();
+    const res = await fetch("https://ai-mini-uber.onrender.com/ride");
+    const data = await res.json();
 
-      document.getElementById("output").innerText =
-        "Pickup: " + data.pickup + "\n" +
-        "Drop: " + data.drop + "\n" +
-        "Driver: " + data.assignedDriver + "\n" +
-        "Driver From: " + data.driverFrom + "\n" +
-        "Path: " + data.path.join(" → ") + "\n" +
-        "Distance: " + data.rideDistance + " km\n" +
-        "Fare: ₹" + Math.round(data.fare);
-
-    } catch (error) {
-      document.getElementById("output").innerText = "Error fetching ride data.";
-    }
+    document.getElementById("output").innerText =
+      "Pickup: " + data.pickup + "\n" +
+      "Drop: " + data.drop + "\n" +
+      "Driver: " + data.assignedDriver + "\n" +
+      "Driver From: " + data.driverFrom + "\n" +
+      "Path: " + data.path.join(" → ") + "\n" +
+      "Distance: " + data.rideDistance + " km\n" +
+      "Fare: ₹" + data.fare + "\n" +
+      "High Demand Area: " + data.highDemandArea;
   }
+
+  // =========================
+  // HEATMAP
+  // =========================
+  async function loadHeatmap() {
+    const res = await fetch("https://ai-mini-uber.onrender.com/heatmap");
+    const data = await res.json();
+
+    const heatPoints = data.heatmapData.map(loc => {
+      if (loc === "A") return [28.6139, 77.2090, 0.8];
+      if (loc === "B") return [28.6200, 77.2300, 0.8];
+      if (loc === "C") return [28.6100, 77.2200, 0.8];
+      if (loc === "D") return [28.6250, 77.2150, 0.8];
+    });
+
+    L.heatLayer(heatPoints, { radius: 25 }).addTo(map);
+  }
+
+  loadHeatmap();
 </script>
 
 </body>
 </html>
-
