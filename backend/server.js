@@ -1,89 +1,60 @@
 const express = require("express");
-const dijkstra = require("./graph");
-const drivers = require("./drivers");
-const predictFare = require("./fareModel");
-
 const app = express();
 
-/* Home route */
-app.get("/", (req, res) => {
-  res.send("🚖 AI Mini Uber backend is running. Use /ride");
-});
+const dijkstra = require("./graph");
+const predictFare = require("./fareModel");
 
-/* Ride route */
-app.get("/ride", (req, res) => {
-  try {
-    const pickup = "A";
-    const drop = "D";
+const drivers = [
+  { name: "Driver 1", location: "A" },
+  { name: "Driver 2", location: "B" },
+  { name: "Driver 3", location: "A" }
+];
 
-    let nearestDriver = null;
-    let minDistance = Infinity;
+// Find nearest driver
+function findNearestDriver(pickup) {
+  let minDistance = Infinity;
+  let nearestDriver = null;
 
-    // Find nearest driver
-    for (let driver of drivers) {
-     const result = dijkstra(driver.location, pickup);
+  for (let driver of drivers) {
+    const result = dijkstra(driver.location, pickup);
 
-// AI score (distance-based intelligence)
-const score = result.distance;
-
-if (score < minDistance) {
-  minDistance = score;
-  nearestDriver = driver;
-}
+    if (result.distance < minDistance) {
+      minDistance = result.distance;
+      nearestDriver = driver;
     }
-
-    // Safety check
-    if (!nearestDriver) {
-      return res.status(500).json({ error: "No driver found" });
-    }
-
-    const rideRoute = dijkstra(pickup, drop);
-// AI-based fare prediction
-const baseFare = 40;
-const perKmRate = 12;
-    // Traffic simulation (AI logic)
-const trafficLevel = "HIGH"; // LOW | MEDIUM | HIGH
-
-let trafficMultiplier = 1;
-
-if (trafficLevel === "MEDIUM") trafficMultiplier = 1.2;
-if (trafficLevel === "HIGH") trafficMultiplier = 1.5;
-// Time-based surge pricing (AI logic)
-const hour = new Date().getHours();
-let surgeMultiplier = 1;
-
-// Peak hours: 8–10 AM, 6–9 PM
-if ((hour >= 8 && hour <= 10) || (hour >= 18 && hour <= 21)) {
-  surgeMultiplier = 1.3;
-}
-    const fare =
-  (baseFare + rideRoute.distance * perKmRate) *
-  trafficMultiplier *
-  surgeMultiplier;
-
-
-
-    res.json({
-      pickup,
-      drop,
-      assignedDriver: nearestDriver.name,
-      driverFrom: nearestDriver.location,
-      driverDistance: minDistance,
-      rideDistance: rideRoute.distance,
-      path: rideRoute.path,
-      fare: fare
-    });
-
-  } catch (error) {
-    res.status(500).json({
-      error: "Internal error",
-      message: error.message
-    });
   }
+
+  return nearestDriver;
+}
+
+app.get("/ride", (req, res) => {
+  const pickup = "A";
+  const drop = "D";
+
+  const rideRoute = dijkstra(pickup, drop);
+  const rideDistance = rideRoute.distance;
+
+  const nearestDriver = findNearestDriver(pickup);
+
+  // ML-based fare prediction
+  const fare = predictFare(rideDistance);
+
+  res.json({
+    pickup,
+    drop,
+    assignedDriver: nearestDriver.name,
+    driverFrom: nearestDriver.location,
+    rideDistance,
+    path: rideRoute.path,
+    fare
+  });
 });
 
-/* Port for Render */
+app.get("/", (req, res) => {
+  res.send("AI Mini Uber Backend Running");
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log("Mini Uber server running");
+  console.log("Mini Uber server running on port", PORT);
 });
