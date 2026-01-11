@@ -11,6 +11,7 @@
 
   <style>
     * { box-sizing: border-box; }
+
     body {
       margin: 0;
       padding: 0;
@@ -18,13 +19,9 @@
       background: #f1f3f6;
       transition: 0.3s;
     }
-    body.dark {
-      background: #0f172a;
-      color: #e5e7eb;
-    }
-    body.accessible {
-      font-size: 18px;
-    }
+
+    body.dark { background: #0f172a; color: #e5e7eb; }
+    body.accessible { font-size: 18px; }
 
     /* LOGIN */
     .login-screen {
@@ -38,6 +35,7 @@
       animation: fadeIn 0.6s ease;
     }
     body.dark .login-screen { background: #1e293b; }
+
     .login-screen input {
       width: 100%;
       padding: 10px;
@@ -45,6 +43,7 @@
       border-radius: 6px;
       border: 1px solid #ccc;
     }
+
     .login-screen button {
       width: 100%;
       padding: 10px;
@@ -79,8 +78,10 @@
       text-align: center;
       position: relative;
     }
+
     .header small { opacity: 0.8; }
-    .toggle, .acc-toggle, .demo-btn {
+
+    .toggle, .acc-toggle, .demo-btn, .admin-btn {
       position: absolute;
       top: 10px;
       background: white;
@@ -90,18 +91,15 @@
       font-size: 12px;
       cursor: pointer;
     }
+
     .toggle { right: 10px; }
-    .acc-toggle { right: 70px; }
-    .demo-btn { left: 10px; background: #fde68a; }
+    .acc-toggle { right: 60px; }
+    .admin-btn { right: 120px; background: #fde68a; }
+    .demo-btn { left: 10px; background: #bbf7d0; }
 
-    #map {
-      height: 260px;
-      width: 100%;
-    }
+    #map { height: 260px; width: 100%; }
 
-    .content {
-      padding: 14px;
-    }
+    .content { padding: 14px; }
 
     .banner {
       background: #e0f2fe;
@@ -117,11 +115,7 @@
       color: #991b1b;
     }
 
-    .network {
-      font-size: 12px;
-      color: #16a34a;
-      margin-bottom: 6px;
-    }
+    .network { font-size: 12px; color: #16a34a; margin-bottom: 6px; }
 
     .dashboard {
       display: flex;
@@ -180,6 +174,16 @@
     }
     body.dark .ai-box { background: #1e40af; color: #e0e7ff; }
 
+    .ai-timeline {
+      background: #eff6ff;
+      padding: 8px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-top: 10px;
+      color: #2563eb;
+    }
+    body.dark .ai-timeline { background: #1e3a8a; color: #e0e7ff; }
+
     .history {
       margin-top: 10px;
       padding: 10px;
@@ -193,6 +197,7 @@
       margin-top: 10px;
       font-size: 12px;
     }
+
     .bar {
       height: 8px;
       background: #e5e7eb;
@@ -200,6 +205,7 @@
       overflow: hidden;
       margin-top: 4px;
     }
+
     .fill {
       height: 100%;
       width: 80%;
@@ -215,6 +221,15 @@
       color: #0f766e;
     }
 
+    .admin-panel {
+      margin-top: 10px;
+      padding: 10px;
+      background: #fef3c7;
+      border-radius: 10px;
+      font-size: 13px;
+      display: none;
+    }
+
     button {
       width: 100%;
       padding: 12px;
@@ -227,6 +242,7 @@
       font-size: 16px;
       transition: 0.3s;
     }
+
     button:hover {
       background: #333;
       transform: scale(1.03);
@@ -284,6 +300,7 @@
 <div class="app-container" id="appContainer" style="display:none;">
   <div class="header">
     <div class="demo-btn" onclick="demoMode()">🎬 Demo</div>
+    <div class="admin-btn" onclick="toggleAdmin()">🛠 Admin</div>
     <div class="acc-toggle" onclick="toggleAccessibility()">♿</div>
     <div class="toggle" onclick="toggleDark()">🌙</div>
     <h2>AI Mini Uber</h2>
@@ -318,8 +335,17 @@
     </div>
 
     <!-- Explainable AI -->
-    <div class="ai-box" id="aiBox">
-      🤖 AI reasoning will appear here.
+    <div class="ai-box" id="aiBox">🤖 AI reasoning will appear here.</div>
+
+    <!-- AI Timeline -->
+    <div class="ai-timeline" id="aiTimeline">
+      🤖 AI Timeline:
+      <div id="timelineSteps">• Waiting for action...</div>
+    </div>
+
+    <!-- Driver ETA -->
+    <div style="margin-top:8px; font-size:13px;">
+      🚗 Driver ETA: <b id="etaText">–</b> min
     </div>
 
     <!-- AI Confidence -->
@@ -342,6 +368,14 @@
       • Learns pricing patterns
     </div>
 
+    <!-- Admin Panel -->
+    <div class="admin-panel" id="adminPanel">
+      <b>🛠 Admin Panel</b><br>
+      Active Drivers: 3<br>
+      High Demand Zone: <span id="adminDemand">–</span><br>
+      Total Rides Today: <span id="adminRides">0</span>
+    </div>
+
     <button onclick="bookRide()">Book Ride</button>
     <div class="status" id="statusText"></div>
   </div>
@@ -358,8 +392,10 @@
 <audio id="notifySound" src="https://assets.mixkit.co/sfx/preview/mixkit-bell-notification-933.mp3"></audio>
 
 <script>
-  let map, totalRides = 0, totalFare = 0;
+  let map, carMarker;
+  let totalRides = 0, totalFare = 0;
   let history = [];
+  let adminOn = false;
 
   function toggleDark() {
     document.body.classList.toggle("dark");
@@ -367,6 +403,11 @@
 
   function toggleAccessibility() {
     document.body.classList.toggle("accessible");
+  }
+
+  function toggleAdmin() {
+    adminOn = !adminOn;
+    document.getElementById("adminPanel").style.display = adminOn ? "block" : "none";
   }
 
   function showToast(msg) {
@@ -419,12 +460,40 @@
 
     L.polyline([pickup, drop], { color: "#2563eb", weight: 4 }).addTo(map);
 
+    carMarker = L.marker(pickup).addTo(map).bindPopup("🚗 Driver");
+
     loadHeatmap();
+  }
+
+  function animateCar() {
+    const path = [
+      [28.6139, 77.2090],
+      [28.6160, 77.2150],
+      [28.6180, 77.2220],
+      [28.6200, 77.2300]
+    ];
+
+    let i = 0;
+    const interval = setInterval(() => {
+      if (i >= path.length) {
+        clearInterval(interval);
+        return;
+      }
+      carMarker.setLatLng(path[i]);
+      i++;
+    }, 800);
   }
 
   async function bookRide() {
     document.getElementById("clickSound").play();
     statusText.innerText = "Searching for driver...";
+
+    const timeline = document.getElementById("timelineSteps");
+    timeline.innerHTML = "• Analyzing drivers...";
+    setTimeout(() => timeline.innerHTML += "<br>• Checking traffic & demand...", 600);
+    setTimeout(() => timeline.innerHTML += "<br>• Calculating optimal fare...", 1200);
+    setTimeout(() => timeline.innerHTML += "<br>• Optimizing route...", 1800);
+    setTimeout(() => timeline.innerHTML += "<br>• Decision locked ✅", 2400);
 
     setTimeout(() => statusText.innerText = "Driver assigned...", 800);
     setTimeout(() => statusText.innerText = "On the way...", 1500);
@@ -439,7 +508,8 @@
       fareText.innerText = "₹ " + data.fare;
       demandText.innerText = data.highDemandArea || "-";
 
-      driverCard.innerHTML = `<b>Driver:</b> ${data.assignedDriver}<br>⭐ Rating: 4.8<br>🚗 Vehicle: DL 01 AB 1234<br>AI Score: <b id="aiScore">${Math.floor(Math.random()*20)+80}/100</b>`;
+      const score = Math.floor(Math.random()*20)+80;
+      driverCard.innerHTML = `<b>Driver:</b> ${data.assignedDriver}<br>⭐ Rating: 4.8<br>🚗 Vehicle: DL 01 AB 1234<br>AI Score: <b id="aiScore">${score}/100</b>`;
 
       aiBox.innerHTML = `🤖 AI Reasoning:<br>
       • Driver 1 distance: 2.1 km<br>
@@ -454,6 +524,10 @@
         surgeText.innerText = "No surge";
       }
 
+      const eta = Math.floor(Math.random() * 4) + 2;
+      etaText.innerText = eta;
+      animateCar();
+
       totalRides++;
       totalFare += data.fare;
       totalRidesElem.innerText = totalRides;
@@ -464,6 +538,9 @@
       historyList.innerHTML = history.map(h => "• " + h).join("<br>");
 
       confidenceFill.style.width = (Math.floor(Math.random()*20)+70) + "%";
+
+      adminDemand.innerText = data.highDemandArea || "Normal";
+      adminRides.innerText = totalRides;
 
       statusText.innerText = "Ride completed ✔️";
       document.getElementById("notifySound").play();
