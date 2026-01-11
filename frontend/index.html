@@ -23,8 +23,6 @@
     body.dark { background: #0f172a; color: #e5e7eb; }
     body.accessible { font-size: 18px; }
 
-
-    /* APP */
     .app-container {
       max-width: 430px;
       margin: 20px auto;
@@ -51,7 +49,7 @@
 
     .header small { opacity: 0.8; }
 
-    .toggle, .acc-toggle, .demo-btn, .admin-btn {
+    .toggle, .acc-toggle, .demo-btn, .admin-btn, .logout-btn {
       position: absolute;
       top: 10px;
       background: white;
@@ -65,6 +63,7 @@
     .toggle { right: 10px; }
     .acc-toggle { right: 60px; }
     .admin-btn { right: 120px; background: #fde68a; }
+    .logout-btn { right: 190px; background: #fecaca; }
     .demo-btn { left: 10px; background: #bbf7d0; }
 
     #map { height: 260px; width: 100%; }
@@ -257,22 +256,13 @@
 
 <body>
 
-<!-- LOGIN -->
-<div class="login-screen" id="loginScreen">
-  <h2>🔐 Login</h2>
-  <input type="text" id="username" placeholder="Username" />
-  <input type="password" id="password" placeholder="Password" />
-  <button onclick="login()">Login</button>
-  <div id="loginMsg"></div>
-</div>
-
-<!-- APP -->
-<div class="app-container" id="appContainer" style="display:none;">
+<div class="app-container" id="appContainer">
   <div class="header">
     <div class="demo-btn" onclick="demoMode()">🎬 Demo</div>
     <div class="admin-btn" onclick="toggleAdmin()">🛠 Admin</div>
     <div class="acc-toggle" onclick="toggleAccessibility()">♿</div>
     <div class="toggle" onclick="toggleDark()">🌙</div>
+    <div class="logout-btn" onclick="logout()">🚪 Logout</div>
     <h2>AI Mini Uber</h2>
     <small>AI that moves you</small>
   </div>
@@ -296,7 +286,6 @@
     <div class="row"><span>High Demand:</span><span class="badge" id="demandText">–</span></div>
     <div class="row"><span>Surge:</span><span id="surgeText">–</span></div>
 
-    <!-- Driver Card -->
     <div class="driver-card" id="driverCard">
       <b>Driver:</b> – <br>
       ⭐ Rating: 4.8 <br>
@@ -304,33 +293,27 @@
       AI Score: <b id="aiScore">–</b>
     </div>
 
-    <!-- Explainable AI -->
     <div class="ai-box" id="aiBox">🤖 AI reasoning will appear here.</div>
 
-    <!-- AI Timeline -->
     <div class="ai-timeline" id="aiTimeline">
       🤖 AI Timeline:
       <div id="timelineSteps">• Waiting for action...</div>
     </div>
 
-    <!-- Driver ETA -->
     <div style="margin-top:8px; font-size:13px;">
       🚗 Driver ETA: <b id="etaText">–</b> min
     </div>
 
-    <!-- AI Confidence -->
     <div class="confidence">
       AI Confidence:
       <div class="bar"><div class="fill" id="confidenceFill"></div></div>
     </div>
 
-    <!-- Ride History -->
     <div class="history" id="historyBox">
       <b>Ride History:</b>
       <div id="historyList">No rides yet</div>
     </div>
 
-    <!-- Why AI -->
     <div class="why-ai">
       <b>Why AI?</b><br>
       • Predicts demand<br>
@@ -338,7 +321,6 @@
       • Learns pricing patterns
     </div>
 
-    <!-- Admin Panel -->
     <div class="admin-panel" id="adminPanel">
       <b>🛠 Admin Panel</b><br>
       Active Drivers: 3<br>
@@ -357,19 +339,22 @@
 
 <div class="toast" id="toast"></div>
 
-<!-- Sounds -->
-<audio id="clickSound" src="https://assets.mixkit.co/sfx/preview/mixkit-select-click-1109.mp3"></audio>
-<audio id="notifySound" src="https://assets.mixkit.co/sfx/preview/mixkit-bell-notification-933.mp3"></audio>
-
 <script>
-  if (document.referrer.indexOf("login.html") === -1) {
-  window.location.href = "login.html";
-}
+  // LOGIN PROTECTION
+  if (localStorage.getItem("loggedIn") !== "true") {
+    window.location.href = "login.html";
+  }
 
   let map, carMarker;
   let totalRides = 0, totalFare = 0;
   let history = [];
   let adminOn = false;
+
+  function logout() {
+    localStorage.removeItem("loggedIn");
+    localStorage.removeItem("username");
+    window.location.href = "login.html";
+  }
 
   function toggleDark() {
     document.body.classList.toggle("dark");
@@ -392,9 +377,7 @@
   }
 
   function demoMode() {
-    username.value = "user1";
-    password.value = "1234";
-    login();
+    showToast("Demo mode activated");
     setTimeout(() => bookRide(), 1500);
   }
 
@@ -438,18 +421,7 @@
   }
 
   async function bookRide() {
-    document.getElementById("clickSound").play();
     statusText.innerText = "Searching for driver...";
-
-    const timeline = document.getElementById("timelineSteps");
-    timeline.innerHTML = "• Analyzing drivers...";
-    setTimeout(() => timeline.innerHTML += "<br>• Checking traffic & demand...", 600);
-    setTimeout(() => timeline.innerHTML += "<br>• Calculating optimal fare...", 1200);
-    setTimeout(() => timeline.innerHTML += "<br>• Optimizing route...", 1800);
-    setTimeout(() => timeline.innerHTML += "<br>• Decision locked ✅", 2400);
-
-    setTimeout(() => statusText.innerText = "Driver assigned...", 800);
-    setTimeout(() => statusText.innerText = "On the way...", 1500);
 
     try {
       const res = await fetch("https://ai-mini-uber.onrender.com/ride");
@@ -461,25 +433,12 @@
       fareText.innerText = "₹ " + data.fare;
       demandText.innerText = data.highDemandArea || "-";
 
-      const score = Math.floor(Math.random()*20)+80;
-      driverCard.innerHTML = `<b>Driver:</b> ${data.assignedDriver}<br>⭐ Rating: 4.8<br>🚗 Vehicle: DL 01 AB 1234<br>AI Score: <b id="aiScore">${score}/100</b>`;
+      driverCard.innerHTML = `<b>Driver:</b> ${data.assignedDriver}<br>⭐ Rating: 4.8<br>🚗 Vehicle: DL 01 AB 1234<br>AI Score: <b>${Math.floor(Math.random()*20)+80}/100</b>`;
 
       aiBox.innerHTML = `🤖 AI Reasoning:<br>
-      • Driver 1 distance: 2.1 km<br>
-      • Driver 2 distance: 4.5 km<br>
+      • Optimized driver selected<br>
       • Area demand: ${data.highDemandArea || "Normal"}<br>
       • Final decision: ${data.assignedDriver}`;
-
-      if (data.highDemandArea === data.pickup) {
-        surgeText.innerHTML = '<span class="surge">Surge Active 🔺</span>';
-        showToast("High demand! Surge pricing applied");
-      } else {
-        surgeText.innerText = "No surge";
-      }
-
-      const eta = Math.floor(Math.random() * 4) + 2;
-      etaText.innerText = eta;
-      animateCar();
 
       totalRides++;
       totalFare += data.fare;
@@ -490,14 +449,9 @@
       history = history.slice(0,5);
       historyList.innerHTML = history.map(h => "• " + h).join("<br>");
 
-      confidenceFill.style.width = (Math.floor(Math.random()*20)+70) + "%";
-
-      adminDemand.innerText = data.highDemandArea || "Normal";
-      adminRides.innerText = totalRides;
-
+      animateCar();
       statusText.innerText = "Ride completed ✔️";
-      document.getElementById("notifySound").play();
-      showToast("Driver found & ride booked!");
+      showToast("Ride booked successfully!");
     } catch {
       offlineBanner.style.display = "block";
     }
@@ -520,13 +474,10 @@
       offlineBanner.style.display = "block";
     }
   }
-  // simple protection: if user did not come from login, redirect
-  if (document.referrer.indexOf("login.html") === -1) {
-    window.location.href = "login.html";
-  }
 
+  // INIT MAP
+  initMap();
 </script>
 
 </body>
 </html>
-
