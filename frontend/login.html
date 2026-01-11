@@ -1,92 +1,96 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>Login - AI Mini Uber</title>
   <style>
     body {
       margin: 0;
       padding: 0;
       background: #f2f4f8;
-      font-family: Arial, sans-serif;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
+      font-family: Arial, sans-serif;
     }
 
     .login-box {
       background: white;
       padding: 30px;
-      width: 350px;
-      border-radius: 10px;
+      width: 320px;
+      border-radius: 12px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.1);
       text-align: center;
     }
 
-    .login-box h2 {
+    h2 {
       margin-bottom: 20px;
     }
 
-    .login-box input {
+    input {
       width: 100%;
       padding: 10px;
       margin: 10px 0;
-      border-radius: 5px;
+      border-radius: 6px;
       border: 1px solid #ccc;
       font-size: 14px;
     }
 
-    .login-box button {
+    button {
       width: 100%;
       padding: 12px;
       background: black;
       color: white;
       border: none;
-      border-radius: 5px;
-      font-size: 16px;
+      border-radius: 6px;
       cursor: pointer;
+      font-size: 15px;
+      margin-top: 10px;
     }
 
-    .login-box button:hover {
+    button:hover {
       background: #333;
+    }
+
+    .note {
+      margin-top: 12px;
+      font-size: 12px;
+      color: gray;
     }
   </style>
 </head>
 <body>
 
   <div class="login-box">
-    <h2>🔐 Login</h2>
-    <input type="text" id="username" placeholder="Username">
-    <input type="password" id="password" placeholder="Password">
-    <button onclick="loginUser()">Login</button>
+    <h2>🔐 AI Mini Uber Login</h2>
+
+    <input type="text" id="username" placeholder="Enter username" />
+    <input type="password" id="password" placeholder="Enter password" />
+
+    <button onclick="login()">Login</button>
+
+    <div class="note">* Any username & password will work</div>
   </div>
 
-<script>
-function loginUser() {
-  const username = document.getElementById("username").value;
-  const password = document.getElementById("password").value;
+  <script>
+    function login() {
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
 
-  if (!username || !password) {
-    alert("Please enter both username and password");
-    return;
-  }
-
-  fetch(`http://localhost:3000/login?username=${username}&password=${password}`)
-    .then(res => res.json())
-    .then(data => {
-      if (data.success) {
-        alert("Login Successful 🚀");
-        window.location.href = "index.html";
-      } else {
-        alert("Login Failed ❌");
+      if (username.trim() === "" || password.trim() === "") {
+        alert("Please enter username and password");
+        return;
       }
-    })
-    .catch(err => {
-      console.error(err);
-      alert("Server error");
-    });
-}
-</script>
+
+      // Save login state
+      localStorage.setItem("loggedIn", "true");
+      localStorage.setItem("username", username);
+
+      // Redirect to main app
+      window.location.href = "index.html";
+    }
+  </script>
 
 </body>
 </html>
