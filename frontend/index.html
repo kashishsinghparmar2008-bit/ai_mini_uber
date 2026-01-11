@@ -1,118 +1,273 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>AI Mini Uber - Map View</title>
+  <meta charset="UTF-8" />
+  <title>AI Mini Uber – Smart Ride</title>
 
-  <!-- Leaflet CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-
-  <!-- Leaflet JS -->
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-  <!-- Heatmap Plugin -->
   <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
 
   <style>
+    * { box-sizing: border-box; }
+
     body {
       margin: 0;
       padding: 0;
-      font-family: Arial, sans-serif;
-      background: #f4f6f8;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background: #f1f3f6;
+      transition: background 0.3s ease;
     }
 
-    .container {
-      width: 420px;
-      margin: 30px auto;
-      background: white;
-      padding: 15px;
-      border-radius: 12px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    body.dark {
+      background: #0f172a;
+      color: #e5e7eb;
+    }
+
+    .app-container {
+      max-width: 420px;
+      margin: 20px auto;
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      animation: fadeIn 0.8s ease;
+    }
+
+    body.dark .app-container {
+      background: #1e293b;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .header {
+      background: linear-gradient(135deg, #000000, #333333);
+      color: white;
+      padding: 16px;
       text-align: center;
+      position: relative;
+    }
+
+    .header h2 {
+      margin: 0;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .toggle {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      cursor: pointer;
+      font-size: 14px;
+      background: #ffffff;
+      color: #000;
+      padding: 4px 10px;
+      border-radius: 20px;
     }
 
     #map {
-      height: 300px;
-      margin-bottom: 10px;
-      border-radius: 10px;
+      height: 260px;
+      width: 100%;
+    }
+
+    .content {
+      padding: 16px;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .label { color: #555; }
+    body.dark .label { color: #cbd5e1; }
+
+    .value { font-weight: 600; }
+
+    .badge {
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: #fee2e2;
+      color: #991b1b;
+      font-size: 12px;
     }
 
     button {
       width: 100%;
       padding: 12px;
-      background: black;
+      margin-top: 12px;
+      background: #000000;
       color: white;
       border: none;
+      border-radius: 8px;
       cursor: pointer;
-      border-radius: 6px;
       font-size: 16px;
+      transition: background 0.3s ease, transform 0.2s ease;
     }
 
-    pre {
-      background: #eee;
+    button:hover {
+      background: #333333;
+      transform: scale(1.02);
+    }
+
+    .footer {
+      text-align: center;
       padding: 10px;
-      margin-top: 10px;
+      font-size: 12px;
+      color: #888;
+      background: #fafafa;
+      border-top: 1px solid #eee;
+    }
+
+    body.dark .footer {
+      background: #1e293b;
+      color: #94a3b8;
+      border-top: 1px solid #334155;
+    }
+
+    /* LOGIN SCREEN */
+    .login-screen {
+      max-width: 360px;
+      margin: 60px auto;
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 14px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      text-align: center;
+      animation: fadeIn 0.8s ease;
+    }
+
+    body.dark .login-screen {
+      background: #1e293b;
+    }
+
+    .login-screen h2 {
+      margin-bottom: 10px;
+    }
+
+    .login-screen input {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
       border-radius: 6px;
-      text-align: left;
+      border: 1px solid #ccc;
       font-size: 14px;
+    }
+
+    .login-screen button {
+      margin-top: 10px;
+    }
+
+    @media (max-width: 480px) {
+      .app-container {
+        margin: 10px;
+      }
     }
   </style>
 </head>
 
 <body>
 
-<div class="container">
-  <h2>🚖 AI Mini Uber (Map + AI View)</h2>
+<!-- LOGIN SCREEN -->
+<div class="login-screen" id="loginScreen">
+  <h2>🔐 Login</h2>
+  <input type="text" id="username" placeholder="Username" />
+  <input type="password" id="password" placeholder="Password" />
+  <button onclick="login()">Login</button>
+  <div id="loginMsg"></div>
+</div>
+
+<!-- MAIN APP -->
+<div class="app-container" id="appContainer" style="display:none;">
+
+  <div class="header">
+    <h2>AI Mini Uber</h2>
+    <div class="toggle" onclick="toggleDarkMode()">🌙</div>
+  </div>
 
   <div id="map"></div>
 
-  <button onclick="bookRide()">Book Ride</button>
+  <div class="content">
+    <div class="row"><span class="label">Pickup:</span><span class="value" id="pickupText">A</span></div>
+    <div class="row"><span class="label">Drop:</span><span class="value" id="dropText">D</span></div>
+    <div class="row"><span class="label">Driver:</span><span class="value" id="driverText">–</span></div>
+    <div class="row"><span class="label">Distance:</span><span class="value" id="distanceText">– km</span></div>
+    <div class="row"><span class="label">Fare:</span><span class="value" id="fareText">₹ –</span></div>
+    <div class="row"><span class="label">High Demand:</span><span class="badge" id="demandText">–</span></div>
 
-  <pre id="output">Click "Book Ride" to see ride details</pre>
+    <button onclick="bookRide()">Book Ride</button>
+  </div>
+
+  <div class="footer">
+    Built by Kashish • AI + DSA Project
+  </div>
 </div>
 
 <script>
-  // =========================
-  // MAP SETUP
-  // =========================
-  const map = L.map('map').setView([28.6139, 77.2090], 13);
+  // DARK MODE
+  function toggleDarkMode() {
+    document.body.classList.toggle("dark");
+  }
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors'
-  }).addTo(map);
+  // LOGIN
+  async function login() {
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
 
-  const pickupLocation = [28.6139, 77.2090];
-  const dropLocation = [28.6200, 77.2300];
+    const res = await fetch(`https://ai-mini-uber.onrender.com/login?username=${username}&password=${password}`);
+    const data = await res.json();
 
-  L.marker(pickupLocation).addTo(map).bindPopup("📍 Pickup").openPopup();
-  L.marker(dropLocation).addTo(map).bindPopup("🏁 Drop");
+    if (data.success) {
+      document.getElementById("loginScreen").style.display = "none";
+      document.getElementById("appContainer").style.display = "block";
+      initMap();
+    } else {
+      document.getElementById("loginMsg").innerText = "Invalid login!";
+    }
+  }
 
-  const routeLine = L.polyline([pickupLocation, dropLocation], {
-    color: 'blue',
-    weight: 4
-  }).addTo(map);
+  // MAP + HEATMAP
+  let map;
 
-  // =========================
+  function initMap() {
+    map = L.map("map").setView([28.6139, 77.2090], 13);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap"
+    }).addTo(map);
+
+    const pickupLocation = [28.6139, 77.2090];
+    const dropLocation = [28.6200, 77.2300];
+
+    L.marker(pickupLocation).addTo(map).bindPopup("📍 Pickup").openPopup();
+    L.marker(dropLocation).addTo(map).bindPopup("🏁 Drop");
+
+    L.polyline([pickupLocation, dropLocation], { color: "#2563eb", weight: 4 }).addTo(map);
+
+    loadHeatmap();
+  }
+
   // BOOK RIDE
-  // =========================
   async function bookRide() {
     const res = await fetch("https://ai-mini-uber.onrender.com/ride");
     const data = await res.json();
 
-    document.getElementById("output").innerText =
-      "Pickup: " + data.pickup + "\n" +
-      "Drop: " + data.drop + "\n" +
-      "Driver: " + data.assignedDriver + "\n" +
-      "Driver From: " + data.driverFrom + "\n" +
-      "Path: " + data.path.join(" → ") + "\n" +
-      "Distance: " + data.rideDistance + " km\n" +
-      "Fare: ₹" + data.fare + "\n" +
-      "High Demand Area: " + data.highDemandArea;
+    document.getElementById("pickupText").innerText = data.pickup;
+    document.getElementById("dropText").innerText = data.drop;
+    document.getElementById("driverText").innerText = data.assignedDriver;
+    document.getElementById("distanceText").innerText = data.rideDistance + " km";
+    document.getElementById("fareText").innerText = "₹ " + data.fare;
+    document.getElementById("demandText").innerText = data.highDemandArea || "-";
   }
 
-  // =========================
   // HEATMAP
-  // =========================
   async function loadHeatmap() {
     const res = await fetch("https://ai-mini-uber.onrender.com/heatmap");
     const data = await res.json();
@@ -124,10 +279,8 @@
       if (loc === "D") return [28.6250, 77.2150, 0.8];
     });
 
-    L.heatLayer(heatPoints, { radius: 25 }).addTo(map);
+    L.heatLayer(heatPoints, { radius: 25, blur: 15 }).addTo(map);
   }
-
-  loadHeatmap();
 </script>
 
 </body>
