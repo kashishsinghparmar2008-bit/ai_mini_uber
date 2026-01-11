@@ -1,101 +1,193 @@
 const express = require("express");
+const cors = require("cors");
+
 const app = express();
+app.use(cors());
 
-const dijkstra = require("./graph");
-const predictFare = require("./fareModel");
-const demandModel = require("./demandModel");
+const PORT = process.env.PORT || 3000;
 
-// Drivers
+/* =========================
+   MOCK CITY GRAPH (DSA)
+========================= */
+const graph = {
+  A: { B: 4, C: 2 },
+  B: { A: 4, D: 5 },
+  C: { A: 2, D: 8 },
+  D: { B: 5, C: 8 }
+};
+
+/* =========================
+   DRIVERS DATA
+========================= */
 const drivers = [
   { name: "Driver 1", location: "A" },
   { name: "Driver 2", location: "B" },
-  { name: "Driver 3", location: "A" }
+  { name: "Driver 3", location: "C" }
 ];
 
-// Users for login
-const users = [
-  { username: "user1", password: "1234" },
-  { username: "admin", password: "admin" }
-];
+/* =========================
+   RIDE HISTORY (for demand)
+========================= */
+let rideHistory = [];
 
-// Find nearest driver
-function findNearestDriver(pickup) {
-  let minDistance = Infinity;
-  let nearestDriver = null;
+/* =========================
+   DIJKSTRA ALGORITHM
+========================= */
+function dijkstra(start, end) {
+  const distances = {};
+  const visited = {};
+  const previous = {};
 
-  for (let driver of drivers) {
-    const result = dijkstra(driver.location, pickup);
-    if (result.distance < minDistance) {
-      minDistance = result.distance;
-      nearestDriver = driver;
+  for (let node in graph) {
+    distances[node] = Infinity;
+    visited[node] = false;
+    previous[node] = null;
+  }
+
+  distances[start] = 0;
+
+  for (let i = 0; i < Object.keys(graph).length; i++) {
+    let minNode = null;
+    let minDistance = Infinity;
+
+    for (let node in distances) {
+      if (!visited[node] && distances[node] < minDistance) {
+        minDistance = distances[node];
+        minNode = node;
+      }
+    }
+
+    if (!minNode) break;
+
+    visited[minNode] = true;
+
+    for (let neighbor in graph[minNode]) {
+      let newDist = distances[minNode] + graph[minNode][neighbor];
+      if (newDist < distances[neighbor]) {
+        distances[neighbor] = newDist;
+        previous[neighbor] = minNode;
+      }
     }
   }
-  return nearestDriver;
+
+  // Build path
+  const path = [];
+  let current = end;
+  while (current) {
+    path.unshift(current);
+    current = previous[current];
+  }
+
+  return { distance: distances[end], path };
 }
 
-// ======================
-// LOGIN ROUTE
-// ======================
+/* =========================
+   SIMPLE ML FARE MODEL
+========================= */
+function predictFare(distance) {
+  const baseFare = 50;
+  const perKmRate = 15;
+  return Math.round(baseFare + distance * perKmRate);
+}
+
+/* =========================
+   DEMAND FORECAST MODEL
+========================= */
+function getHighDemandArea() {
+  if (rideHistory.length === 0) return null;
+
+  const freq = {};
+  rideHistory.forEach(loc => {
+    freq[loc] = (freq[loc] || 0) + 1;
+  });
+
+  let max = 0;
+  let high = null;
+
+  for (let loc in freq) {
+    if (freq[loc] > max) {
+      max = freq[loc];
+      high = loc;
+    }
+  }
+
+  return high;
+}
+
+/* =========================
+   🔓 OPEN LOGIN (ANYONE)
+========================= */
 app.get("/login", (req, res) => {
   const { username, password } = req.query;
 
-  const user = users.find(
-    u => u.username === username && u.password === password
-  );
-
-  if (user) {
-    res.json({ success: true, message: "Login successful", user: username });
+  if (username && password) {
+    res.json({
+      success: true,
+      message: "Login successful",
+      user: username
+    });
   } else {
-    res.status(401).json({ success: false, message: "Invalid credentials" });
+    res.status(400).json({
+      success: false,
+      message: "Please enter username and password"
+    });
   }
 });
 
-// ======================
-// RIDE ROUTE
-// ======================
+/* =========================
+   🚖 BOOK RIDE API
+========================= */
 app.get("/ride", (req, res) => {
   const pickup = "A";
   const drop = "D";
 
-  // Track demand
-  demandModel.addRide(pickup);
+  const route = dijkstra(pickup, drop);
 
-  const rideRoute = dijkstra(pickup, drop);
-  const rideDistance = rideRoute.distance;
+  // Find nearest driver
+  let bestDriver = null;
+  let minDistance = Infinity;
 
-  const nearestDriver = findNearestDriver(pickup);
+  drivers.forEach(driver => {
+    const d = dijkstra(driver.location, pickup).distance;
+    if (d < minDistance) {
+      minDistance = d;
+      minDistance = d;
+      bestDriver = driver;
+    }
+  });
 
-  // ML fare prediction
-  const fare = predictFare(rideDistance);
+  const fare = predictFare(route.distance);
+
+  rideHistory.push(pickup);
+
+  const highDemandArea = getHighDemandArea();
 
   res.json({
     pickup,
     drop,
-    assignedDriver: nearestDriver.name,
-    driverFrom: nearestDriver.location,
-    rideDistance,
-    path: rideRoute.path,
+    assignedDriver: bestDriver.name,
+    driverFrom: bestDriver.location,
+    driverDistance: minDistance,
+    rideDistance: route.distance,
+    path: route.path,
     fare,
-    highDemandArea: demandModel.getHighDemandArea()
+    highDemandArea
   });
 });
 
-// ======================
-// HEATMAP DATA ROUTE
-// ======================
+/* =========================
+   🔥 HEATMAP API
+========================= */
 app.get("/heatmap", (req, res) => {
   res.json({
-    heatmapData: demandModel.getHeatmapData()
+    heatmapData: rideHistory.slice(-10)
   });
 });
 
-// Home
-app.get("/", (req, res) => {
-  res.send("AI Mini Uber Backend Running with ML, Login & Heatmap");
-});
-
-const PORT = process.env.PORT || 3000;
+/* =========================
+   SERVER START
+========================= */
 app.listen(PORT, () => {
-  console.log("Mini Uber server running on port", PORT);
+  console.log(`🚀 AI Mini Uber backend running on port ${PORT}`);
 });
 
