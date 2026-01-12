@@ -6,122 +6,69 @@
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
 
   <style>
     * { box-sizing:border-box; margin:0; padding:0; }
-
     body { font-family: "Segoe UI", sans-serif; background:#f5f5f5; }
     body.dark { background:#0f172a; color:#e5e7eb; }
 
-    .app {
-      max-width:420px;
-      margin:auto;
-      background:white;
-      min-height:100vh;
-      display:flex;
-      flex-direction:column;
-    }
-
+    .app { max-width:420px; margin:auto; background:white; min-height:100vh; display:flex; flex-direction:column; position:relative; }
     body.dark .app { background:#1e293b; }
 
-    .header {
-      background:black;
-      color:white;
-      padding:14px;
-      text-align:center;
-      position:relative;
-    }
+    .header { background:black; color:white; padding:14px; text-align:center; position:relative; }
+    .header h2 { font-size:20px; }
+    .header small { opacity:0.8; }
 
-    .top-btn {
-      position:absolute;
-      top:10px;
-      padding:4px 10px;
-      border-radius:20px;
-      font-size:12px;
-      cursor:pointer;
-      background:white;
-      color:black;
-    }
-
+    .top-btn { position:absolute; top:10px; padding:4px 10px; border-radius:20px; font-size:12px; cursor:pointer; background:white; color:black; }
     .demo-btn { left:10px; background:#bbf7d0; }
-    .admin-btn { right:150px; background:#fde68a; }
-    .profile-btn { right:110px; }
-    .logout-btn { right:60px; background:#fecaca; }
-    .toggle { right:10px; }
+    .admin-btn { right:180px; background:#fde68a; }
+    .profile-btn { right:130px; }
+    .logout-btn { right:80px; background:#fecaca; }
+    .toggle { right:30px; }
 
     #map { height:280px; width:100%; }
 
-    .sheet {
-      background:white;
-      padding:14px;
-      border-top-left-radius:20px;
-      border-top-right-radius:20px;
-      margin-top:-20px;
-      flex:1;
-      overflow-y:auto;
-    }
-
+    .sheet { background:white; padding:14px; border-top-left-radius:20px; border-top-right-radius:20px; margin-top:-20px; flex:1; overflow-y:auto; transition:transform 0.3s ease; }
+    .sheet.drag { transform:translateY(-40px); }
     body.dark .sheet { background:#1e293b; }
 
-    .card {
-      background:#f3f4f6;
-      padding:10px;
-      border-radius:12px;
-      margin-bottom:10px;
-      font-size:13px;
-    }
-
+    .card { background:#f3f4f6; padding:10px; border-radius:12px; margin-bottom:10px; font-size:13px; }
     body.dark .card { background:#334155; }
 
-    .banner { background:#e0f2fe; color:#075985; padding:8px; border-radius:8px; margin-bottom:8px; }
+    .banner { background:#e0f2fe; color:#075985; padding:8px; border-radius:8px; margin-bottom:8px; font-size:13px; }
+    .offline { background:#fee2e2; color:#991b1b; }
+
     .row { display:flex; justify-content:space-between; margin:4px 0; }
-    .badge { background:#fee2e2; color:#991b1b; padding:2px 8px; border-radius:20px; }
-    .surge { background:#dc2626; color:white; padding:2px 8px; border-radius:20px; }
+
+    .badge { background:#fee2e2; color:#991b1b; padding:2px 8px; border-radius:20px; font-size:12px; }
+    .surge { background:#dc2626; color:white; padding:2px 8px; border-radius:20px; font-size:12px; }
 
     .bar { height:8px; background:#e5e7eb; border-radius:10px; overflow:hidden; margin-top:4px; }
-    .fill { height:100%; background:#22c55e; width:0%; }
+    .fill { height:100%; background:#22c55e; width:80%; }
 
-    button {
-      width:100%;
-      padding:12px;
-      background:black;
-      color:white;
-      border:none;
-      border-radius:10px;
-      margin-top:10px;
-      cursor:pointer;
-      font-size:16px;
-    }
+    button { width:100%; padding:12px; background:black; color:white; border:none; border-radius:10px; margin-top:10px; cursor:pointer; font-size:16px; }
 
     .status { text-align:center; font-size:13px; margin-top:6px; color:#2563eb; }
-
-    .toast {
-      position:fixed;
-      bottom:20px;
-      left:50%;
-      transform:translateX(-50%);
-      background:black;
-      color:white;
-      padding:10px 16px;
-      border-radius:20px;
-      font-size:13px;
-      opacity:0;
-      transition:0.3s;
-    }
-    .toast.show { opacity:1; }
-
     .admin-panel { display:none; background:#fef3c7; }
 
-    /* PAYMENT MODAL */
-    #paymentModal {
-      position:fixed; top:0; left:0; width:100%; height:100%;
+    .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:black; color:white; padding:10px 16px; border-radius:20px; font-size:13px; opacity:0; transition:0.3s; }
+    .toast.show { opacity:1; }
+
+    .modal {
+      position:fixed; top:0; left:0; right:0; bottom:0;
       background:rgba(0,0,0,0.5);
-      display:none; justify-content:center; align-items:center;
-      z-index:999;
+      display:none; align-items:center; justify-content:center;
+      z-index:10;
     }
-    #paymentModal .box {
-      background:white; padding:20px; border-radius:14px; width:300px; text-align:center;
+
+    .modal-box {
+      background:white; padding:20px; border-radius:12px; width:300px;
     }
+
+    body.dark .modal-box { background:#1e293b; color:white; }
+
+    .footer { text-align:center; font-size:12px; padding:10px; color:#888; }
   </style>
 </head>
 
@@ -136,7 +83,7 @@
 <div class="app">
 
   <div class="header">
-    <div class="top-btn demo-btn" onclick="bookRide()">Demo</div>
+    <div class="top-btn demo-btn" onclick="demoMode()">Demo</div>
     <div class="top-btn admin-btn" onclick="toggleAdmin()">Admin</div>
     <div class="top-btn profile-btn" onclick="openProfile()">👤</div>
     <div class="top-btn logout-btn" onclick="logout()">⎋</div>
@@ -147,11 +94,13 @@
 
   <div id="map"></div>
 
-  <div class="sheet">
+  <div class="sheet" id="sheet">
 
-    <div class="banner">🔮 AI Prediction: High demand expected in Area B</div>
+    <div class="banner" id="predictionBanner">🔮 AI Prediction: High demand expected in Area B in next 30 minutes</div>
+    <div class="banner offline" id="offlineBanner" style="display:none;">⚠️ You are offline. Showing cached data.</div>
 
     <div class="card">
+      🌐 Network: 4G | Low Latency<br>
       Total Rides: <b id="totalRides">0</b> | Avg Fare: ₹ <b id="avgFare">0</b>
     </div>
 
@@ -164,28 +113,25 @@
       <div class="row"><span>Surge:</span><span id="surgeText">–</span></div>
     </div>
 
-    <!-- DRIVER CARD -->
     <div class="card" id="driverCard">
-      <div style="display:flex;align-items:center;gap:10px;">
-        <img src="https://i.pravatar.cc/80?img=12" style="width:50px;height:50px;border-radius:50%;">
-        <div>
-          <b id="driverName">Driver</b><br>
-          ⭐ Rating: 4.8<br>
-          🚗 DL 01 AB 1234
-        </div>
-      </div>
+      <b>Driver:</b> –<br>
+      ⭐ Rating: 4.8<br>
+      🚗 Vehicle: DL 01 AB 1234<br>
       AI Score: <b id="aiScore">–</b>
     </div>
 
     <div class="card" id="aiBox">🤖 AI reasoning will appear here.</div>
 
-    <div class="card">
-      🚗 Driver ETA: <b id="etaText">–</b> min
+    <div class="card" id="aiTimeline">
+      🤖 AI Timeline:
+      <div id="timelineSteps">• Waiting for action...</div>
     </div>
 
+    <div class="card">🚗 Driver ETA: <b id="etaText">–</b> min</div>
+
     <div class="card">
-      Trip Progress
-      <div class="bar"><div class="fill" id="tripProgress"></div></div>
+      AI Confidence:
+      <div class="bar"><div class="fill" id="confidenceFill"></div></div>
     </div>
 
     <div class="card" id="historyBox">
@@ -193,8 +139,16 @@
       <div id="historyList">No rides yet</div>
     </div>
 
+    <div class="card">
+      <b>Why AI?</b><br>
+      • Predicts demand<br>
+      • Optimizes driver selection<br>
+      • Learns pricing patterns
+    </div>
+
     <div class="card admin-panel" id="adminPanel">
       <b>🛠 Admin Panel</b><br>
+      Active Drivers: 3<br>
       High Demand Zone: <span id="adminDemand">–</span><br>
       Total Rides Today: <span id="adminRides">0</span>
     </div>
@@ -203,17 +157,17 @@
     <div class="status" id="statusText"></div>
 
   </div>
+
+  <div class="footer">Built by Kashish • AI + DSA Project</div>
 </div>
 
-<!-- PAYMENT MODAL -->
-<div id="paymentModal">
-  <div class="box">
-    <h3>💳 Uber Pay</h3>
-    <p>Total Fare: <b id="payAmount">₹ 0</b></p>
-    <button onclick="payNow('UPI')">Pay with UPI</button>
-    <button onclick="payNow('Card')">Pay with Card</button>
-    <button onclick="payNow('Cash')">Cash</button>
-    <button style="background:#ccc;color:black;" onclick="closePayment()">Cancel</button>
+<!-- Payment Modal -->
+<div class="modal" id="paymentModal">
+  <div class="modal-box">
+    <h3>💳 Choose Payment</h3>
+    <button onclick="pay('Cash')">Cash</button>
+    <button onclick="pay('UPI')">UPI</button>
+    <button onclick="pay('Card')">Card</button>
   </div>
 </div>
 
@@ -225,17 +179,18 @@
   let history = [];
   let adminOn = false;
 
-  welcomeUser.innerText = "Welcome, " + localStorage.getItem("username");
+  document.getElementById("welcomeUser").innerText = "Welcome, " + localStorage.getItem("username");
 
   function toggleDark() { document.body.classList.toggle("dark"); }
 
   function toggleAdmin() {
     adminOn = !adminOn;
-    adminPanel.style.display = adminOn ? "block" : "none";
+    document.getElementById("adminPanel").style.display = adminOn ? "block" : "none";
   }
 
   function logout() {
-    localStorage.clear();
+    localStorage.removeItem("loggedIn");
+    localStorage.removeItem("username");
     window.location.href = "login.html";
   }
 
@@ -244,23 +199,28 @@
   }
 
   function showToast(msg) {
+    const toast = document.getElementById("toast");
     toast.innerText = msg;
     toast.classList.add("show");
-    setTimeout(()=>toast.classList.remove("show"),2500);
+    setTimeout(() => toast.classList.remove("show"), 2500);
+  }
+
+  function demoMode() {
+    bookRide();
   }
 
   function initMap() {
-    map = L.map("map").setView([28.6139,77.2090], 13);
+    map = L.map("map").setView([28.6139, 77.2090], 13);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
 
     const pickup = [28.6139,77.2090];
     const drop = [28.6200,77.2300];
 
-    L.marker(pickup).addTo(map);
-    L.marker(drop).addTo(map);
+    L.marker(pickup).addTo(map).bindPopup("📍 Pickup");
+    L.marker(drop).addTo(map).bindPopup("🏁 Drop");
     L.polyline([pickup, drop], { color:"#2563eb", weight:4 }).addTo(map);
 
-    carMarker = L.marker(pickup).addTo(map);
+    carMarker = L.marker(pickup).addTo(map).bindPopup("🚗 Driver");
   }
 
   initMap();
@@ -281,22 +241,26 @@
     }, 700);
   }
 
-  function openPayment(amount) {
-    payAmount.innerText = "₹ " + amount;
-    paymentModal.style.display = "flex";
-  }
-
-  function closePayment() {
-    paymentModal.style.display = "none";
-  }
-
-  function payNow(method) {
-    closePayment();
-    showToast("Payment successful via " + method);
-  }
-
   async function bookRide() {
     statusText.innerText = "Searching for driver...";
+    document.getElementById("paymentModal").style.display = "flex";
+  }
+
+  function pay(method) {
+    document.getElementById("paymentModal").style.display = "none";
+    showToast("Paid using " + method);
+    startRide();
+  }
+
+  async function startRide() {
+    statusText.innerText = "Driver assigned. On the way...";
+
+    const timeline = document.getElementById("timelineSteps");
+    timeline.innerHTML = "• Analyzing drivers...";
+    setTimeout(()=>timeline.innerHTML+="<br>• Checking traffic & demand...",600);
+    setTimeout(()=>timeline.innerHTML+="<br>• Calculating optimal fare...",1200);
+    setTimeout(()=>timeline.innerHTML+="<br>• Optimizing route...",1800);
+    setTimeout(()=>timeline.innerHTML+="<br>• Decision locked ✅",2400);
 
     try {
       const res = await fetch("https://ai-mini-uber.onrender.com/ride");
@@ -309,10 +273,11 @@
       demandText.innerText = data.highDemandArea || "-";
 
       const score = Math.floor(Math.random()*20)+80;
-      driverName.innerText = data.assignedDriver;
-      aiScore.innerText = score + "/100";
+      driverCard.innerHTML = `<b>Driver:</b> ${data.assignedDriver}<br>⭐ Rating: 4.8<br>🚗 Vehicle: DL 01 AB 1234<br>AI Score: <b>${score}/100</b>`;
 
-      aiBox.innerHTML = `🤖 AI chose ${data.assignedDriver} due to optimal distance & demand`;
+      aiBox.innerHTML = `🤖 AI Reasoning:<br>
+      • Area demand: ${data.highDemandArea || "Normal"}<br>
+      • Final decision: ${data.assignedDriver}`;
 
       if(data.highDemandArea === data.pickup) {
         surgeText.innerHTML = '<span class="surge">Surge Active 🔺</span>';
@@ -332,30 +297,27 @@
       history = history.slice(0,5);
       historyList.innerHTML = history.map(h=>"• "+h).join("<br>");
 
+      confidenceFill.style.width = (Math.floor(Math.random()*20)+70) + "%";
       adminDemand.innerText = data.highDemandArea || "Normal";
       adminRides.innerText = totalRides;
 
-      statusText.innerText = "Driver on the way 🚗";
-      showToast("Driver found!");
-
-      // Trip progress
-      let progress = 0;
-      tripProgress.style.width = "0%";
-      const interval = setInterval(() => {
-        if(progress >= 100) {
-          clearInterval(interval);
-          statusText.innerText = "Trip Completed ✅";
-          openPayment(data.fare);
-          return;
-        }
-        progress += 10;
-        tripProgress.style.width = progress + "%";
-      }, 800);
+      statusText.innerText = "Trip in progress 🚗";
+      showToast("Driver on the way!");
 
     } catch {
-      showToast("Network error");
+      offlineBanner.style.display = "block";
     }
   }
+
+  let startY = 0;
+  const sheet = document.getElementById("sheet");
+
+  sheet.addEventListener("touchstart", e => { startY = e.touches[0].clientY; });
+  sheet.addEventListener("touchmove", e => {
+    const currentY = e.touches[0].clientY;
+    if(startY - currentY > 30) sheet.classList.add("drag");
+    if(currentY - startY > 30) sheet.classList.remove("drag");
+  });
 </script>
 
 </body>
