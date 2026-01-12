@@ -13,7 +13,7 @@
     body { font-family: "Segoe UI", sans-serif; background:#f5f5f5; }
     body.dark { background:#0f172a; color:#e5e7eb; }
 
-    .app { max-width:420px; margin:auto; background:white; min-height:100vh; display:flex; flex-direction:column; position:relative; }
+    .app { max-width:420px; margin:auto; background:white; min-height:100vh; display:flex; flex-direction:column; }
     body.dark .app { background:#1e293b; }
 
     .header { background:black; color:white; padding:14px; text-align:center; position:relative; }
@@ -22,15 +22,14 @@
 
     .top-btn { position:absolute; top:10px; padding:4px 10px; border-radius:20px; font-size:12px; cursor:pointer; background:white; color:black; }
     .demo-btn { left:10px; background:#bbf7d0; }
-    .admin-btn { right:180px; background:#fde68a; }
-    .profile-btn { right:130px; }
-    .logout-btn { right:80px; background:#fecaca; }
-    .toggle { right:30px; }
+    .admin-btn { right:200px; background:#fde68a; }
+    .profile-btn { right:150px; }
+    .logout-btn { right:100px; background:#fecaca; }
+    .toggle { right:50px; }
 
     #map { height:280px; width:100%; }
 
-    .sheet { background:white; padding:14px; border-top-left-radius:20px; border-top-right-radius:20px; margin-top:-20px; flex:1; overflow-y:auto; transition:transform 0.3s ease; }
-    .sheet.drag { transform:translateY(-40px); }
+    .sheet { background:white; padding:14px; border-top-left-radius:20px; border-top-right-radius:20px; margin-top:-20px; flex:1; overflow-y:auto; transition:0.3s; }
     body.dark .sheet { background:#1e293b; }
 
     .card { background:#f3f4f6; padding:10px; border-radius:12px; margin-bottom:10px; font-size:13px; }
@@ -105,8 +104,8 @@
     </div>
 
     <div class="card">
-      <div class="row"><span>Pickup:</span><span id="pickupText">A</span></div>
-      <div class="row"><span>Drop:</span><span id="dropText">D</span></div>
+      <div class="row"><span>Pickup:</span><span id="pickupText">Tap on map</span></div>
+      <div class="row"><span>Drop:</span><span id="dropText">Tap on map</span></div>
       <div class="row"><span>Distance:</span><span id="distanceText">– km</span></div>
       <div class="row"><span>Fare:</span><span id="fareText">₹ –</span></div>
       <div class="row"><span>High Demand:</span><span class="badge" id="demandText">–</span></div>
@@ -114,9 +113,10 @@
     </div>
 
     <div class="card" id="driverCard">
-      <b>Driver:</b> –<br>
-      ⭐ Rating: 4.8<br>
+      <b>Driver:</b> Rahul Sharma<br>
+      ⭐ Rating: 4.9<br>
       🚗 Vehicle: DL 01 AB 1234<br>
+      📞 <span style="color:blue;cursor:pointer" onclick="callDriver()">Call Driver</span><br>
       AI Score: <b id="aiScore">–</b>
     </div>
 
@@ -171,10 +171,20 @@
   </div>
 </div>
 
+<!-- Rating Modal -->
+<div class="modal" id="ratingModal">
+  <div class="modal-box">
+    <h3>⭐ Rate Your Ride</h3>
+    <button onclick="rate(5)">★★★★★</button>
+    <button onclick="rate(4)">★★★★☆</button>
+    <button onclick="rate(3)">★★★☆☆</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-  let map, carMarker;
+  let map, carMarker, pickupMarker, dropMarker, pickupLatLng, dropLatLng;
   let totalRides = 0, totalFare = 0;
   let history = [];
   let adminOn = false;
@@ -198,6 +208,10 @@
     alert("👤 User: " + localStorage.getItem("username") + "\n⭐ Rating: 4.9\n🚕 Rides: " + totalRides);
   }
 
+  function callDriver() {
+    alert("📞 Calling driver...");
+  }
+
   function showToast(msg) {
     const toast = document.getElementById("toast");
     toast.innerText = msg;
@@ -213,36 +227,44 @@
     map = L.map("map").setView([28.6139, 77.2090], 13);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
 
-    const pickup = [28.6139,77.2090];
-    const drop = [28.6200,77.2300];
-
-    L.marker(pickup).addTo(map).bindPopup("📍 Pickup");
-    L.marker(drop).addTo(map).bindPopup("🏁 Drop");
-    L.polyline([pickup, drop], { color:"#2563eb", weight:4 }).addTo(map);
-
-    carMarker = L.marker(pickup).addTo(map).bindPopup("🚗 Driver");
+    map.on("click", function(e) {
+      if(!pickupLatLng) {
+        pickupLatLng = e.latlng;
+        pickupMarker = L.marker(pickupLatLng).addTo(map).bindPopup("📍 Pickup").openPopup();
+        pickupText.innerText = pickupLatLng.lat.toFixed(3) + ", " + pickupLatLng.lng.toFixed(3);
+      } else if(!dropLatLng) {
+        dropLatLng = e.latlng;
+        dropMarker = L.marker(dropLatLng).addTo(map).bindPopup("🏁 Drop").openPopup();
+        dropText.innerText = dropLatLng.lat.toFixed(3) + ", " + dropLatLng.lng.toFixed(3);
+        L.polyline([pickupLatLng, dropLatLng], { color:"#2563eb", weight:4 }).addTo(map);
+        carMarker = L.marker(pickupLatLng).addTo(map).bindPopup("🚗 Driver");
+      }
+    });
   }
 
   initMap();
 
   function animateCar() {
-    const path = [
-      [28.6139,77.2090],
-      [28.6150,77.2120],
-      [28.6170,77.2180],
-      [28.6185,77.2240],
-      [28.6200,77.2300]
-    ];
+    if(!pickupLatLng || !dropLatLng) return;
+    let latStep = (dropLatLng.lat - pickupLatLng.lat) / 20;
+    let lngStep = (dropLatLng.lng - pickupLatLng.lng) / 20;
     let i = 0;
+
     const interval = setInterval(() => {
-      if(i >= path.length) { clearInterval(interval); return; }
-      carMarker.setLatLng(path[i]);
+      if(i >= 20) { clearInterval(interval); return; }
+      let lat = pickupLatLng.lat + latStep * i;
+      let lng = pickupLatLng.lng + lngStep * i;
+      carMarker.setLatLng([lat, lng]);
       i++;
-    }, 700);
+    }, 500);
   }
 
-  async function bookRide() {
-    statusText.innerText = "Searching for driver...";
+  function bookRide() {
+    if(!pickupLatLng || !dropLatLng) {
+      alert("Please select pickup and drop on map");
+      return;
+    }
+    statusText.innerText = "Choose payment method...";
     document.getElementById("paymentModal").style.display = "flex";
   }
 
@@ -252,72 +274,47 @@
     startRide();
   }
 
-  async function startRide() {
+  function startRide() {
     statusText.innerText = "Driver assigned. On the way...";
+    timelineSteps.innerHTML = "• AI analyzing demand...";
+    setTimeout(()=>timelineSteps.innerHTML+="<br>• Optimizing route...",800);
+    setTimeout(()=>timelineSteps.innerHTML+="<br>• Driver selected...",1600);
+    setTimeout(()=>timelineSteps.innerHTML+="<br>• Ride started ✅",2400);
 
-    const timeline = document.getElementById("timelineSteps");
-    timeline.innerHTML = "• Analyzing drivers...";
-    setTimeout(()=>timeline.innerHTML+="<br>• Checking traffic & demand...",600);
-    setTimeout(()=>timeline.innerHTML+="<br>• Calculating optimal fare...",1200);
-    setTimeout(()=>timeline.innerHTML+="<br>• Optimizing route...",1800);
-    setTimeout(()=>timeline.innerHTML+="<br>• Decision locked ✅",2400);
+    let fare = Math.floor(Math.random()*100)+100;
+    fareText.innerText = "₹ " + fare;
+    distanceText.innerText = (Math.random()*5+1).toFixed(2) + " km";
+    demandText.innerText = "High";
+    surgeText.innerHTML = '<span class="surge">Surge Active 🔺</span>';
 
-    try {
-      const res = await fetch("https://ai-mini-uber.onrender.com/ride");
-      const data = await res.json();
+    aiBox.innerHTML = "🤖 AI Reasoning:<br>• High demand area<br>• Closest driver selected<br>• Optimal pricing applied";
 
-      pickupText.innerText = data.pickup;
-      dropText.innerText = data.drop;
-      distanceText.innerText = data.rideDistance + " km";
-      fareText.innerText = "₹ " + data.fare;
-      demandText.innerText = data.highDemandArea || "-";
+    etaText.innerText = Math.floor(Math.random()*5)+2;
+    confidenceFill.style.width = (Math.floor(Math.random()*20)+70) + "%";
 
-      const score = Math.floor(Math.random()*20)+80;
-      driverCard.innerHTML = `<b>Driver:</b> ${data.assignedDriver}<br>⭐ Rating: 4.8<br>🚗 Vehicle: DL 01 AB 1234<br>AI Score: <b>${score}/100</b>`;
+    animateCar();
 
-      aiBox.innerHTML = `🤖 AI Reasoning:<br>
-      • Area demand: ${data.highDemandArea || "Normal"}<br>
-      • Final decision: ${data.assignedDriver}`;
+    totalRides++;
+    totalFare += fare;
+    totalRidesElem.innerText = totalRides;
+    avgFareElem.innerText = Math.round(totalFare / totalRides);
 
-      if(data.highDemandArea === data.pickup) {
-        surgeText.innerHTML = '<span class="surge">Surge Active 🔺</span>';
-      } else surgeText.innerText = "No surge";
+    history.unshift("Ride completed | ₹" + fare);
+    historyList.innerHTML = history.map(h=>"• "+h).join("<br>");
 
-      const eta = Math.floor(Math.random()*4)+2;
-      etaText.innerText = eta;
+    adminDemand.innerText = "High";
+    adminRides.innerText = totalRides;
 
-      animateCar();
-
-      totalRides++;
-      totalFare += data.fare;
-      totalRidesElem.innerText = totalRides;
-      avgFareElem.innerText = Math.round(totalFare / totalRides);
-
-      history.unshift(`${data.pickup} → ${data.drop} | ₹${data.fare} | ${data.assignedDriver}`);
-      history = history.slice(0,5);
-      historyList.innerHTML = history.map(h=>"• "+h).join("<br>");
-
-      confidenceFill.style.width = (Math.floor(Math.random()*20)+70) + "%";
-      adminDemand.innerText = data.highDemandArea || "Normal";
-      adminRides.innerText = totalRides;
-
-      statusText.innerText = "Trip in progress 🚗";
-      showToast("Driver on the way!");
-
-    } catch {
-      offlineBanner.style.display = "block";
-    }
+    setTimeout(()=> {
+      statusText.innerText = "Ride completed ✔️";
+      document.getElementById("ratingModal").style.display = "flex";
+    }, 12000);
   }
 
-  let startY = 0;
-  const sheet = document.getElementById("sheet");
-
-  sheet.addEventListener("touchstart", e => { startY = e.touches[0].clientY; });
-  sheet.addEventListener("touchmove", e => {
-    const currentY = e.touches[0].clientY;
-    if(startY - currentY > 30) sheet.classList.add("drag");
-    if(currentY - startY > 30) sheet.classList.remove("drag");
-  });
+  function rate(stars) {
+    document.getElementById("ratingModal").style.display = "none";
+    showToast("Thanks for rating " + stars + " stars ⭐");
+  }
 </script>
 
 </body>
