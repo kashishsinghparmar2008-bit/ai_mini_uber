@@ -1,97 +1,82 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Login - AI Mini Uber</title>
+  <title>Login – AI Mini Uber</title>
   <style>
     body {
-      margin: 0;
-      padding: 0;
-      background: #f2f4f8;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
+      margin:0;
       font-family: Arial, sans-serif;
+      background:#f2f4f8;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      height:100vh;
     }
 
-    .login-box {
-      background: white;
-      padding: 30px;
-      width: 320px;
-      border-radius: 12px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-      text-align: center;
+    .box {
+      background:white;
+      padding:30px;
+      border-radius:14px;
+      width:320px;
+      text-align:center;
+      box-shadow:0 10px 30px rgba(0,0,0,0.1);
     }
 
-    h2 {
-      margin-bottom: 20px;
-    }
+    h2 { margin-bottom:20px; }
 
     input {
-      width: 100%;
-      padding: 10px;
-      margin: 10px 0;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      font-size: 14px;
+      width:100%;
+      padding:12px;
+      margin:10px 0;
+      border-radius:8px;
+      border:1px solid #ccc;
+      font-size:14px;
     }
 
     button {
-      width: 100%;
-      padding: 12px;
-      background: black;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 15px;
-      margin-top: 10px;
+      width:100%;
+      padding:12px;
+      background:black;
+      color:white;
+      border:none;
+      border-radius:8px;
+      cursor:pointer;
+      font-size:16px;
     }
 
-    button:hover {
-      background: #333;
-    }
+    button:hover { background:#333; }
 
-    .note {
-      margin-top: 12px;
-      font-size: 12px;
-      color: gray;
-    }
+    .msg { color:red; margin-top:10px; font-size:13px; }
   </style>
 </head>
+
 <body>
 
-  <div class="login-box">
-    <h2>🔐 AI Mini Uber Login</h2>
+<div class="box">
+  <h2>🚗 AI Mini Uber</h2>
+  <p style="font-size:13px; color:#666;">Login to continue</p>
+  <input id="username" placeholder="Username">
+  <input id="password" type="password" placeholder="Password">
+  <button onclick="login()">Login</button>
+  <div class="msg" id="msg"></div>
+</div>
 
-    <input type="text" id="username" placeholder="Enter username" />
-    <input type="password" id="password" placeholder="Enter password" />
+<script>
+  function login() {
+    const u = username.value.trim();
+    const p = password.value.trim();
 
-    <button onclick="login()">Login</button>
-
-    <div class="note">* Any username & password will work</div>
-  </div>
-
-  <script>
-    function login() {
-      const username = document.getElementById("username").value;
-      const password = document.getElementById("password").value;
-
-      if (username.trim() === "" || password.trim() === "") {
-        alert("Please enter username and password");
-        return;
-      }
-
-      // Save login state
-      localStorage.setItem("loggedIn", "true");
-      localStorage.setItem("username", username);
-
-      // Redirect to main app
-      window.location.href = "index.html";
+    if(u === "" || p === "") {
+      msg.innerText = "Please enter username & password";
+      return;
     }
-  </script>
+
+    localStorage.setItem("loggedIn", "true");
+    localStorage.setItem("username", u);
+
+    window.location.href = "index.html";
+  }
+</script>
 
 </body>
 </html>
-
