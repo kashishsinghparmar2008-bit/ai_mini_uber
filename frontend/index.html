@@ -1,48 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>AI Mini Uber</title>
 
-  <!-- Leaflet -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
 
   <style>
-    * { box-sizing: border-box; margin:0; padding:0; }
+    * { box-sizing:border-box; margin:0; padding:0; }
 
     body {
       font-family: "Segoe UI", sans-serif;
-      background: #f5f5f5;
+      background:#f5f5f5;
     }
 
-    body.dark {
-      background:#0f172a;
-      color:#e5e7eb;
-    }
+    body.dark { background:#0f172a; color:#e5e7eb; }
 
     .app {
-      max-width: 420px;
-      margin: auto;
-      background: white;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
+      max-width:420px;
+      margin:auto;
+      background:white;
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+      position:relative;
     }
 
     body.dark .app { background:#1e293b; }
 
-    /* HEADER */
     .header {
-      background: black;
-      color: white;
-      padding: 14px;
-      text-align: center;
-      position: relative;
+      background:black;
+      color:white;
+      padding:14px;
+      text-align:center;
+      position:relative;
     }
 
-    .header h2 { font-size: 20px; }
+    .header h2 { font-size:20px; }
     .header small { opacity:0.8; }
 
     .top-btn {
@@ -57,14 +53,13 @@
     }
 
     .demo-btn { left:10px; background:#bbf7d0; }
-    .admin-btn { right:90px; background:#fde68a; }
+    .admin-btn { right:150px; background:#fde68a; }
+    .profile-btn { right:110px; }
+    .logout-btn { right:60px; background:#fecaca; }
     .toggle { right:10px; }
-    .acc-toggle { right:50px; }
 
-    /* MAP */
-    #map { height: 280px; width:100%; }
+    #map { height:280px; width:100%; }
 
-    /* BOTTOM SHEET */
     .sheet {
       background:white;
       padding:14px;
@@ -73,7 +68,10 @@
       margin-top:-20px;
       flex:1;
       overflow-y:auto;
+      transition:transform 0.3s ease;
     }
+
+    .sheet.drag { transform:translateY(-40px); }
 
     body.dark .sheet { background:#1e293b; }
 
@@ -98,11 +96,7 @@
 
     .offline { background:#fee2e2; color:#991b1b; }
 
-    .row {
-      display:flex;
-      justify-content:space-between;
-      margin:4px 0;
-    }
+    .row { display:flex; justify-content:space-between; margin:4px 0; }
 
     .badge {
       background:#fee2e2;
@@ -155,13 +149,6 @@
 
     .admin-panel { display:none; background:#fef3c7; }
 
-    .footer {
-      text-align:center;
-      font-size:12px;
-      padding:10px;
-      color:#888;
-    }
-
     .toast {
       position:fixed;
       bottom:20px;
@@ -177,28 +164,39 @@
     }
 
     .toast.show { opacity:1; }
+
+    .footer {
+      text-align:center;
+      font-size:12px;
+      padding:10px;
+      color:#888;
+    }
   </style>
 </head>
 
 <body>
 
+<script>
+  if (localStorage.getItem("loggedIn") !== "true") {
+    window.location.href = "login.html";
+  }
+</script>
+
 <div class="app">
 
-  <!-- HEADER -->
   <div class="header">
-    <div class="top-btn demo-btn" onclick="demoMode()">🎬 Demo</div>
-    <div class="top-btn admin-btn" onclick="toggleAdmin()">🛠 Admin</div>
-    <div class="top-btn acc-toggle" onclick="toggleAccessibility()">♿</div>
+    <div class="top-btn demo-btn" onclick="demoMode()">Demo</div>
+    <div class="top-btn admin-btn" onclick="toggleAdmin()">Admin</div>
+    <div class="top-btn profile-btn" onclick="openProfile()">👤</div>
+    <div class="top-btn logout-btn" onclick="logout()">⎋</div>
     <div class="top-btn toggle" onclick="toggleDark()">🌙</div>
     <h2>AI Mini Uber</h2>
-    <small>AI that moves you</small>
+    <small id="welcomeUser"></small>
   </div>
 
-  <!-- MAP -->
   <div id="map"></div>
 
-  <!-- BOTTOM SHEET -->
-  <div class="sheet">
+  <div class="sheet" id="sheet">
 
     <div class="banner" id="predictionBanner">🔮 AI Prediction: High demand expected in Area B in next 30 minutes</div>
     <div class="banner offline" id="offlineBanner" style="display:none;">⚠️ You are offline. Showing cached data.</div>
@@ -217,7 +215,6 @@
       <div class="row"><span>Surge:</span><span id="surgeText">–</span></div>
     </div>
 
-    <!-- DRIVER CARD -->
     <div class="card" id="driverCard">
       <b>Driver:</b> –<br>
       ⭐ Rating: 4.8<br>
@@ -225,31 +222,25 @@
       AI Score: <b id="aiScore">–</b>
     </div>
 
-    <!-- AI REASONING -->
     <div class="card" id="aiBox">🤖 AI reasoning will appear here.</div>
 
-    <!-- AI TIMELINE -->
     <div class="card" id="aiTimeline">
       🤖 AI Timeline:
       <div id="timelineSteps">• Waiting for action...</div>
     </div>
 
-    <!-- ETA -->
     <div class="card">🚗 Driver ETA: <b id="etaText">–</b> min</div>
 
-    <!-- CONFIDENCE -->
     <div class="card">
       AI Confidence:
       <div class="bar"><div class="fill" id="confidenceFill"></div></div>
     </div>
 
-    <!-- HISTORY -->
     <div class="card" id="historyBox">
       <b>Ride History:</b>
       <div id="historyList">No rides yet</div>
     </div>
 
-    <!-- WHY AI -->
     <div class="card">
       <b>Why AI?</b><br>
       • Predicts demand<br>
@@ -257,7 +248,6 @@
       • Learns pricing patterns
     </div>
 
-    <!-- ADMIN -->
     <div class="card admin-panel" id="adminPanel">
       <b>🛠 Admin Panel</b><br>
       Active Drivers: 3<br>
@@ -276,26 +266,29 @@
 
 <div class="toast" id="toast"></div>
 
-<audio id="clickSound" src="https://assets.mixkit.co/sfx/preview/mixkit-select-click-1109.mp3"></audio>
-<audio id="notifySound" src="https://assets.mixkit.co/sfx/preview/mixkit-bell-notification-933.mp3"></audio>
-
 <script>
-  // 🔒 LOGIN PROTECTION
-  if (localStorage.getItem("loggedIn") !== "true") {
-    window.location.href = "login.html";
-  }
-
   let map, carMarker;
   let totalRides = 0, totalFare = 0;
   let history = [];
   let adminOn = false;
 
+  document.getElementById("welcomeUser").innerText = "Welcome, " + localStorage.getItem("username");
+
   function toggleDark() { document.body.classList.toggle("dark"); }
-  function toggleAccessibility() { document.body.classList.toggle("accessible"); }
 
   function toggleAdmin() {
     adminOn = !adminOn;
     document.getElementById("adminPanel").style.display = adminOn ? "block" : "none";
+  }
+
+  function logout() {
+    localStorage.removeItem("loggedIn");
+    localStorage.removeItem("username");
+    window.location.href = "login.html";
+  }
+
+  function openProfile() {
+    alert("👤 User: " + localStorage.getItem("username") + "\n⭐ Rating: 4.9\n🚕 Rides: " + totalRides);
   }
 
   function showToast(msg) {
@@ -306,24 +299,21 @@
   }
 
   function demoMode() {
-    localStorage.setItem("loggedIn","true");
-    initMap();
-    setTimeout(() => bookRide(), 1500);
+    bookRide();
   }
 
   function initMap() {
     map = L.map("map").setView([28.6139, 77.2090], 13);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
 
-    const pickup = [28.6139, 77.2090];
-    const drop = [28.6200, 77.2300];
+    const pickup = [28.6139,77.2090];
+    const drop = [28.6200,77.2300];
 
     L.marker(pickup).addTo(map).bindPopup("📍 Pickup");
     L.marker(drop).addTo(map).bindPopup("🏁 Drop");
     L.polyline([pickup, drop], { color:"#2563eb", weight:4 }).addTo(map);
 
     carMarker = L.marker(pickup).addTo(map).bindPopup("🚗 Driver");
-    loadHeatmap();
   }
 
   initMap();
@@ -331,20 +321,21 @@
   function animateCar() {
     const path = [
       [28.6139,77.2090],
-      [28.6160,77.2150],
-      [28.6180,77.2220],
+      [28.6150,77.2120],
+      [28.6170,77.2180],
+      [28.6185,77.2240],
       [28.6200,77.2300]
     ];
-    let i=0;
-    const interval = setInterval(()=>{
-      if(i>=path.length){ clearInterval(interval); return; }
+
+    let i = 0;
+    const interval = setInterval(() => {
+      if(i >= path.length) { clearInterval(interval); return; }
       carMarker.setLatLng(path[i]);
       i++;
-    },800);
+    }, 700);
   }
 
   async function bookRide() {
-    document.getElementById("clickSound").play();
     statusText.innerText = "Searching for driver...";
 
     const timeline = document.getElementById("timelineSteps");
@@ -360,8 +351,8 @@
 
       pickupText.innerText = data.pickup;
       dropText.innerText = data.drop;
-      distanceText.innerText = data.rideDistance+" km";
-      fareText.innerText = "₹ "+data.fare;
+      distanceText.innerText = data.rideDistance + " km";
+      fareText.innerText = "₹ " + data.fare;
       demandText.innerText = data.highDemandArea || "-";
 
       const score = Math.floor(Math.random()*20)+80;
@@ -371,53 +362,50 @@
       • Area demand: ${data.highDemandArea || "Normal"}<br>
       • Final decision: ${data.assignedDriver}`;
 
-      if(data.highDemandArea === data.pickup){
+      if(data.highDemandArea === data.pickup) {
         surgeText.innerHTML = '<span class="surge">Surge Active 🔺</span>';
       } else surgeText.innerText = "No surge";
 
       const eta = Math.floor(Math.random()*4)+2;
       etaText.innerText = eta;
+
       animateCar();
 
       totalRides++;
       totalFare += data.fare;
       totalRidesElem.innerText = totalRides;
-      avgFareElem.innerText = Math.round(totalFare/totalRides);
+      avgFareElem.innerText = Math.round(totalFare / totalRides);
 
       history.unshift(`${data.pickup} → ${data.drop} | ₹${data.fare} | ${data.assignedDriver}`);
       history = history.slice(0,5);
       historyList.innerHTML = history.map(h=>"• "+h).join("<br>");
 
-      confidenceFill.style.width = (Math.floor(Math.random()*20)+70)+"%";
+      confidenceFill.style.width = (Math.floor(Math.random()*20)+70) + "%";
       adminDemand.innerText = data.highDemandArea || "Normal";
       adminRides.innerText = totalRides;
 
-      statusText.innerText = "Ride completed ✔️";
-      document.getElementById("notifySound").play();
+      statusText.innerText = "Driver on the way 🚗";
       showToast("Driver found & ride booked!");
+
     } catch {
-      offlineBanner.style.display="block";
+      offlineBanner.style.display = "block";
     }
   }
 
-  async function loadHeatmap() {
-    try {
-      const res = await fetch("https://ai-mini-uber.onrender.com/heatmap");
-      const data = await res.json();
+  let startY = 0;
+  const sheet = document.getElementById("sheet");
 
-      const points = data.heatmapData.map(loc=>{
-        if(loc==="A") return [28.6139,77.2090,0.8];
-        if(loc==="B") return [28.6200,77.2300,0.8];
-        if(loc==="C") return [28.6100,77.2200,0.8];
-        if(loc==="D") return [28.6250,77.2150,0.8];
-      });
+  sheet.addEventListener("touchstart", e => {
+    startY = e.touches[0].clientY;
+  });
 
-      L.heatLayer(points,{radius:25,blur:15}).addTo(map);
-    } catch {
-      offlineBanner.style.display="block";
-    }
-  }
+  sheet.addEventListener("touchmove", e => {
+    const currentY = e.touches[0].clientY;
+    if(startY - currentY > 30) sheet.classList.add("drag");
+    if(currentY - startY > 30) sheet.classList.remove("drag");
+  });
 </script>
 
 </body>
 </html>
+
