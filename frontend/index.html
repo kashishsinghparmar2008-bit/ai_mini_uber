@@ -14,7 +14,7 @@
     body { font-family:"Segoe UI", sans-serif; background:#f5f5f5; }
     body.dark { background:#0f172a; color:#e5e7eb; }
 
-    .app { max-width:420px; margin:auto; background:white; min-height:100vh; display:flex; flex-direction:column; }
+    .app { max-width:430px; margin:auto; background:white; min-height:100vh; display:flex; flex-direction:column; }
     body.dark .app { background:#1e293b; }
 
     .header { background:black; color:white; padding:14px; text-align:center; position:relative; }
@@ -28,12 +28,12 @@
     }
 
     .demo-btn { left:10px; background:#bbf7d0; }
-    .admin-btn { right:320px; background:#fde68a; }
-    .voice-btn { right:280px; }
-    .sos-btn { right:240px; background:#ef4444; color:white; }
-    .profile-btn { right:200px; }
-    .logout-btn { right:150px; background:#fecaca; }
-    .toggle { right:100px; }
+    .admin-btn { right:360px; background:#fde68a; }
+    .voice-btn { right:320px; }
+    .sos-btn { right:280px; background:#ef4444; color:white; }
+    .profile-btn { right:240px; }
+    .logout-btn { right:200px; background:#fecaca; }
+    .toggle { right:160px; }
 
     #map { height:260px; width:100%; }
 
@@ -126,9 +126,20 @@
 
   <div class="sheet">
 
+    <!-- Notifications -->
+    <div class="card">
+      <b>🔔 Notifications</b>
+      <div id="notificationBox">No new notifications</div>
+    </div>
+
     <!-- AI Prediction -->
     <div class="banner" id="predictionBanner">🔮 AI Prediction: High demand expected in Area B</div>
     <div class="banner offline" id="offlineBanner" style="display:none;">⚠️ You are offline. Showing cached data.</div>
+
+    <!-- Traffic -->
+    <div class="card">
+      🚦 Traffic Status: <b id="trafficStatus">Moderate</b>
+    </div>
 
     <!-- Stats -->
     <div class="card">
@@ -147,11 +158,26 @@
       <div class="row"><span>Surge:</span><span id="surgeText">–</span></div>
     </div>
 
+    <!-- Route Options -->
+    <div class="card">
+      <b>🛣 Route Options</b><br>
+      <button onclick="selectRoute('Fastest')">Fastest</button>
+      <button onclick="selectRoute('Shortest')">Shortest</button>
+      <button onclick="selectRoute('Scenic')">Scenic</button>
+    </div>
+
     <!-- Saved Places -->
     <div class="card">
       <b>📍 Saved Places</b><br>
       <button onclick="setSaved('Home')">Home</button>
       <button onclick="setSaved('Office')">Office</button>
+    </div>
+
+    <!-- Saved Routes -->
+    <div class="card">
+      <b>💾 Saved Routes</b><br>
+      <button onclick="saveRoute()">Save This Route</button>
+      <div id="savedRoutesList"></div>
     </div>
 
     <!-- Schedule -->
@@ -172,6 +198,12 @@
       <b>👛 Wallet</b><br>
       Balance: ₹<span id="walletBal">500</span><br>
       <button onclick="addMoney()">Add Money</button>
+    </div>
+
+    <!-- Green Ride -->
+    <div class="card">
+      <b>🌱 Green Ride</b><br>
+      <button onclick="greenRide()">Enable EV Mode</button>
     </div>
 
     <!-- Driver Card -->
@@ -214,6 +246,20 @@
       <button onclick="safetyMode()">Enable Safety Mode</button>
     </div>
 
+    <!-- Emergency Contacts -->
+    <div class="card">
+      <b>📞 Emergency Contacts</b><br>
+      <input id="emergencyContact" placeholder="Enter contact number" style="width:100%;padding:6px;">
+      <button onclick="saveEmergency()">Save Contact</button>
+    </div>
+
+    <!-- Live Location Sharing -->
+    <div class="card">
+      <b>📍 Live Location Sharing</b><br>
+      <button onclick="startSharing()">Start Sharing</button>
+      <button onclick="stopSharing()">Stop Sharing</button>
+    </div>
+
     <!-- Trip Progress -->
     <div class="card">
       <b>Trip Progress</b>
@@ -231,12 +277,19 @@
       <div id="historyList">No rides yet</div>
     </div>
 
+    <!-- Ride Replay -->
+    <div class="card">
+      <b>▶️ Ride Replay</b><br>
+      <button onclick="replayRide()">Replay Last Ride</button>
+    </div>
+
     <!-- Admin Panel -->
     <div class="card admin-panel" id="adminPanel">
       <b>🛠 Admin Panel</b><br>
       Active Drivers: 3<br>
       High Demand Zone: <span id="adminDemand">–</span><br>
-      Total Rides Today: <span id="adminRides">0</span>
+      Total Rides Today: <span id="adminRides">0</span><br>
+      Driver Earnings Today: ₹<span id="driverEarnings">1200</span>
     </div>
 
     <button onclick="bookRide()">Book Ride</button>
@@ -274,6 +327,7 @@
   let promoDiscount = 0;
   let totalRides = 0, totalFare = 0;
   let history = [];
+  let savedRoutes = [];
   let adminOn = false;
 
   welcomeUser.innerText = "Welcome, " + localStorage.getItem("username");
@@ -288,11 +342,16 @@
   function logout(){ localStorage.clear(); window.location.href="login.html"; }
   function openProfile(){ alert("User: "+localStorage.getItem("username")); }
   function voiceBook(){ alert("🎤 Voice booking activated (demo)"); }
-  function sos(){ alert("🚨 SOS Activated!"); }
+  function sos(){ alert("🚨 SOS Activated! Emergency contacts notified."); }
   function safetyMode(){ alert("🛡 Safety mode enabled"); }
   function callDriver(){ alert("📞 Calling driver..."); }
   function shareTrip(){ alert("📤 Trip shared"); }
   function demoMode(){ alert("Demo mode on"); }
+
+  function notify(msg){
+    notificationBox.innerText = msg;
+    showToast(msg);
+  }
 
   function showToast(msg){
     const t = document.getElementById("toast");
@@ -301,7 +360,23 @@
     setTimeout(()=>t.classList.remove("show"),2000);
   }
 
+  function updateTraffic(){
+    const states = ["Low", "Moderate", "High"];
+    trafficStatus.innerText = states[Math.floor(Math.random()*states.length)];
+  }
+  setInterval(updateTraffic,4000);
+
+  function selectRoute(type){ showToast(type+" route selected"); }
+
   function setSaved(place){ alert(place+" selected"); }
+
+  function saveRoute(){
+    if(pickupLatLng && dropLatLng){
+      savedRoutes.push(pickupText.innerText+" → "+dropText.innerText);
+      savedRoutesList.innerHTML = savedRoutes.map(r=>"• "+r).join("<br>");
+      showToast("Route saved");
+    }
+  }
 
   function applyPromo(){
     if(promoCode.value==="AI50"){ promoDiscount=50; alert("₹50 discount applied"); }
@@ -314,11 +389,29 @@
     showToast("₹100 added to wallet");
   }
 
+  function greenRide(){ showToast("EV ride selected – eco friendly 🌍"); }
+
   function sendChat(){
     if(chatMsg.value==="") return;
     chatBox.innerHTML += "You: "+chatMsg.value+"<br>";
     chatMsg.value="";
     setTimeout(()=> chatBox.innerHTML+="Driver: On my way 🚗<br>",800);
+  }
+
+  function saveEmergency(){
+    const num = emergencyContact.value;
+    if(num){
+      localStorage.setItem("emergencyContact",num);
+      showToast("Emergency contact saved");
+    }
+  }
+
+  function startSharing(){ showToast("Live location sharing ON"); }
+  function stopSharing(){ showToast("Live location sharing OFF"); }
+
+  function replayRide(){
+    showToast("Replaying last ride (demo)");
+    animateCar();
   }
 
   function initMap(){
@@ -342,6 +435,11 @@
   initMap();
 
   function bookRide(){
+    const schedule = scheduleTime.value;
+    if(schedule){
+      alert("Ride scheduled for: "+schedule);
+      return;
+    }
     if(!pickupLatLng || !dropLatLng){ alert("Select pickup & drop"); return; }
     paymentModal.style.display="flex";
   }
@@ -354,34 +452,27 @@
 
   function startRide(){
     statusText.innerText="Ride started...";
-    let progress=0;
+    notify("Driver assigned & on the way 🚗");
 
-    // AI timeline
     timelineSteps.innerHTML="• Analyzing demand...";
     setTimeout(()=>timelineSteps.innerHTML+="<br>• Selecting driver...",800);
     setTimeout(()=>timelineSteps.innerHTML+="<br>• Optimizing route...",1600);
     setTimeout(()=>timelineSteps.innerHTML+="<br>• Ride started ✅",2400);
 
-    // AI reasoning
     aiBox.innerHTML="🤖 AI Reasoning:<br>• High demand area<br>• Closest driver selected<br>• Optimal pricing applied";
 
-    // Demand + surge
     demandText.innerText="High";
     surgeText.innerHTML='<span class="surge">Surge Active 🔺</span>';
 
-    // Fare & distance
     const dist = (Math.random()*5+1).toFixed(2);
     let fare = Math.floor(Math.random()*100)+100 - promoDiscount;
     distanceText.innerText = dist+" km";
     fareText.innerText = "₹ "+fare;
 
-    // ETA
     etaText.innerText = Math.floor(Math.random()*5)+2;
-
-    // Confidence
     confidenceFill.style.width = (Math.floor(Math.random()*20)+70)+"%";
 
-    // Progress bar
+    let progress=0;
     const intv = setInterval(()=>{
       progress+=10;
       tripProgress.style.width = progress+"%";
@@ -394,11 +485,8 @@
 
     animateCar();
 
-    // Stats
     totalRides++;
     totalFare+=fare;
-    totalRidesElem = document.getElementById("totalRides");
-    avgFareElem = document.getElementById("avgFare");
     totalRidesElem.innerText = totalRides;
     avgFareElem.innerText = Math.round(totalFare/totalRides);
 
@@ -408,6 +496,7 @@
 
     adminDemand.innerText="High";
     adminRides.innerText=totalRides;
+    driverEarnings.innerText = parseInt(driverEarnings.innerText) + fare;
   }
 
   function animateCar(){
