@@ -2,15 +2,16 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>AI Mini Uber</title>
+  <title>AI Mini Uber – Ultimate Edition</title>
 
+  <!-- Leaflet -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
 
   <style>
     * { box-sizing:border-box; margin:0; padding:0; }
-    body { font-family: "Segoe UI", sans-serif; background:#f5f5f5; }
+    body { font-family:"Segoe UI", sans-serif; background:#f5f5f5; }
     body.dark { background:#0f172a; color:#e5e7eb; }
 
     .app { max-width:420px; margin:auto; background:white; min-height:100vh; display:flex; flex-direction:column; }
@@ -18,24 +19,45 @@
 
     .header { background:black; color:white; padding:14px; text-align:center; position:relative; }
     .header h2 { font-size:20px; }
-    .header small { opacity:0.8; }
 
-    .top-btn { position:absolute; top:10px; padding:4px 10px; border-radius:20px; font-size:12px; cursor:pointer; background:white; color:black; }
+    .top-btn {
+      position:absolute; top:10px;
+      padding:4px 10px; border-radius:20px;
+      font-size:12px; cursor:pointer;
+      background:white; color:black;
+    }
+
     .demo-btn { left:10px; background:#bbf7d0; }
-    .admin-btn { right:200px; background:#fde68a; }
-    .profile-btn { right:150px; }
-    .logout-btn { right:100px; background:#fecaca; }
-    .toggle { right:50px; }
+    .admin-btn { right:320px; background:#fde68a; }
+    .voice-btn { right:280px; }
+    .sos-btn { right:240px; background:#ef4444; color:white; }
+    .profile-btn { right:200px; }
+    .logout-btn { right:150px; background:#fecaca; }
+    .toggle { right:100px; }
 
-    #map { height:280px; width:100%; }
+    #map { height:260px; width:100%; }
 
-    .sheet { background:white; padding:14px; border-top-left-radius:20px; border-top-right-radius:20px; margin-top:-20px; flex:1; overflow-y:auto; transition:0.3s; }
+    .sheet {
+      background:white; padding:14px;
+      border-top-left-radius:20px;
+      border-top-right-radius:20px;
+      margin-top:-20px; flex:1; overflow-y:auto;
+    }
     body.dark .sheet { background:#1e293b; }
 
-    .card { background:#f3f4f6; padding:10px; border-radius:12px; margin-bottom:10px; font-size:13px; }
+    .card {
+      background:#f3f4f6; padding:10px;
+      border-radius:12px; margin-bottom:10px;
+      font-size:13px;
+    }
     body.dark .card { background:#334155; }
 
-    .banner { background:#e0f2fe; color:#075985; padding:8px; border-radius:8px; margin-bottom:8px; font-size:13px; }
+    .banner {
+      background:#e0f2fe; color:#075985;
+      padding:8px; border-radius:8px;
+      margin-bottom:8px; font-size:13px;
+    }
+
     .offline { background:#fee2e2; color:#991b1b; }
 
     .row { display:flex; justify-content:space-between; margin:4px 0; }
@@ -44,15 +66,18 @@
     .surge { background:#dc2626; color:white; padding:2px 8px; border-radius:20px; font-size:12px; }
 
     .bar { height:8px; background:#e5e7eb; border-radius:10px; overflow:hidden; margin-top:4px; }
-    .fill { height:100%; background:#22c55e; width:80%; }
+    .fill { height:100%; background:#22c55e; width:0%; }
 
-    button { width:100%; padding:12px; background:black; color:white; border:none; border-radius:10px; margin-top:10px; cursor:pointer; font-size:16px; }
+    button {
+      width:100%; padding:10px;
+      background:black; color:white;
+      border:none; border-radius:8px;
+      margin-top:6px; cursor:pointer;
+    }
 
     .status { text-align:center; font-size:13px; margin-top:6px; color:#2563eb; }
-    .admin-panel { display:none; background:#fef3c7; }
 
-    .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:black; color:white; padding:10px 16px; border-radius:20px; font-size:13px; opacity:0; transition:0.3s; }
-    .toast.show { opacity:1; }
+    .admin-panel { background:#fef3c7; display:none; }
 
     .modal {
       position:fixed; top:0; left:0; right:0; bottom:0;
@@ -61,20 +86,24 @@
       z-index:10;
     }
 
-    .modal-box {
-      background:white; padding:20px; border-radius:12px; width:300px;
-    }
-
+    .modal-box { background:white; padding:20px; border-radius:12px; width:300px; }
     body.dark .modal-box { background:#1e293b; color:white; }
 
-    .footer { text-align:center; font-size:12px; padding:10px; color:#888; }
+    .toast {
+      position:fixed; bottom:20px; left:50%;
+      transform:translateX(-50%);
+      background:black; color:white;
+      padding:10px 16px; border-radius:20px;
+      font-size:13px; opacity:0; transition:0.3s;
+    }
+    .toast.show { opacity:1; }
   </style>
 </head>
 
 <body>
 
 <script>
-  if (localStorage.getItem("loggedIn") !== "true") {
+  if(localStorage.getItem("loggedIn") !== "true") {
     window.location.href = "login.html";
   }
 </script>
@@ -84,6 +113,8 @@
   <div class="header">
     <div class="top-btn demo-btn" onclick="demoMode()">Demo</div>
     <div class="top-btn admin-btn" onclick="toggleAdmin()">Admin</div>
+    <div class="top-btn voice-btn" onclick="voiceBook()">🎤</div>
+    <div class="top-btn sos-btn" onclick="sos()">SOS</div>
     <div class="top-btn profile-btn" onclick="openProfile()">👤</div>
     <div class="top-btn logout-btn" onclick="logout()">⎋</div>
     <div class="top-btn toggle" onclick="toggleDark()">🌙</div>
@@ -93,16 +124,20 @@
 
   <div id="map"></div>
 
-  <div class="sheet" id="sheet">
+  <div class="sheet">
 
-    <div class="banner" id="predictionBanner">🔮 AI Prediction: High demand expected in Area B in next 30 minutes</div>
+    <!-- AI Prediction -->
+    <div class="banner" id="predictionBanner">🔮 AI Prediction: High demand expected in Area B</div>
     <div class="banner offline" id="offlineBanner" style="display:none;">⚠️ You are offline. Showing cached data.</div>
 
+    <!-- Stats -->
     <div class="card">
       🌐 Network: 4G | Low Latency<br>
-      Total Rides: <b id="totalRides">0</b> | Avg Fare: ₹ <b id="avgFare">0</b>
+      Total Rides: <b id="totalRides">0</b> |
+      Avg Fare: ₹ <b id="avgFare">0</b>
     </div>
 
+    <!-- Pickup Drop -->
     <div class="card">
       <div class="row"><span>Pickup:</span><span id="pickupText">Tap on map</span></div>
       <div class="row"><span>Drop:</span><span id="dropText">Tap on map</span></div>
@@ -112,40 +147,91 @@
       <div class="row"><span>Surge:</span><span id="surgeText">–</span></div>
     </div>
 
-    <div class="card" id="driverCard">
-      <b>Driver:</b> Rahul Sharma<br>
-      ⭐ Rating: 4.9<br>
-      🚗 Vehicle: DL 01 AB 1234<br>
-      📞 <span style="color:blue;cursor:pointer" onclick="callDriver()">Call Driver</span><br>
-      AI Score: <b id="aiScore">–</b>
+    <!-- Saved Places -->
+    <div class="card">
+      <b>📍 Saved Places</b><br>
+      <button onclick="setSaved('Home')">Home</button>
+      <button onclick="setSaved('Office')">Office</button>
     </div>
 
+    <!-- Schedule -->
+    <div class="card">
+      <b>⏰ Schedule Ride</b><br>
+      <input type="datetime-local" id="scheduleTime" style="width:100%;padding:6px;">
+    </div>
+
+    <!-- Promo -->
+    <div class="card">
+      <b>🏷 Promo Code</b><br>
+      <input id="promoCode" placeholder="Enter promo code" style="width:100%;padding:6px;">
+      <button onclick="applyPromo()">Apply</button>
+    </div>
+
+    <!-- Wallet -->
+    <div class="card">
+      <b>👛 Wallet</b><br>
+      Balance: ₹<span id="walletBal">500</span><br>
+      <button onclick="addMoney()">Add Money</button>
+    </div>
+
+    <!-- Driver Card -->
+    <div class="card" id="driverCard">
+      <b>Driver:</b> Rahul Sharma<br>
+      ⭐ 4.9 | DL 01 AB 1234<br>
+      AI Score: <b id="aiScore">–</b><br>
+      <span style="color:blue;cursor:pointer" onclick="callDriver()">📞 Call Driver</span>
+    </div>
+
+    <!-- AI Reasoning -->
     <div class="card" id="aiBox">🤖 AI reasoning will appear here.</div>
 
-    <div class="card" id="aiTimeline">
+    <!-- AI Timeline -->
+    <div class="card">
       🤖 AI Timeline:
       <div id="timelineSteps">• Waiting for action...</div>
     </div>
 
+    <!-- ETA -->
     <div class="card">🚗 Driver ETA: <b id="etaText">–</b> min</div>
 
+    <!-- Confidence -->
     <div class="card">
-      AI Confidence:
+      AI Confidence
       <div class="bar"><div class="fill" id="confidenceFill"></div></div>
     </div>
 
-    <div class="card" id="historyBox">
-      <b>Ride History:</b>
+    <!-- Chat -->
+    <div class="card">
+      <b>💬 Chat with Driver</b><br>
+      <input id="chatMsg" placeholder="Type message..." style="width:100%;padding:6px;">
+      <button onclick="sendChat()">Send</button>
+      <div id="chatBox"></div>
+    </div>
+
+    <!-- Safety -->
+    <div class="card">
+      <b>🛡 Women Safety Mode</b><br>
+      <button onclick="safetyMode()">Enable Safety Mode</button>
+    </div>
+
+    <!-- Trip Progress -->
+    <div class="card">
+      <b>Trip Progress</b>
+      <div class="bar"><div class="fill" id="tripProgress"></div></div>
+    </div>
+
+    <!-- Share -->
+    <div class="card">
+      <button onclick="shareTrip()">📤 Share Trip</button>
+    </div>
+
+    <!-- Ride History -->
+    <div class="card">
+      <b>Ride History</b>
       <div id="historyList">No rides yet</div>
     </div>
 
-    <div class="card">
-      <b>Why AI?</b><br>
-      • Predicts demand<br>
-      • Optimizes driver selection<br>
-      • Learns pricing patterns
-    </div>
-
+    <!-- Admin Panel -->
     <div class="card admin-panel" id="adminPanel">
       <b>🛠 Admin Panel</b><br>
       Active Drivers: 3<br>
@@ -158,7 +244,6 @@
 
   </div>
 
-  <div class="footer">Built by Kashish • AI + DSA Project</div>
 </div>
 
 <!-- Payment Modal -->
@@ -184,139 +269,168 @@
 <div class="toast" id="toast"></div>
 
 <script>
-  let map, carMarker, pickupMarker, dropMarker, pickupLatLng, dropLatLng;
+  let map, pickupLatLng, dropLatLng, pickupMarker, dropMarker, carMarker;
+  let walletBalance = 500;
+  let promoDiscount = 0;
   let totalRides = 0, totalFare = 0;
   let history = [];
   let adminOn = false;
 
-  document.getElementById("welcomeUser").innerText = "Welcome, " + localStorage.getItem("username");
+  welcomeUser.innerText = "Welcome, " + localStorage.getItem("username");
 
-  function toggleDark() { document.body.classList.toggle("dark"); }
+  function toggleDark(){ document.body.classList.toggle("dark"); }
 
-  function toggleAdmin() {
+  function toggleAdmin(){
     adminOn = !adminOn;
-    document.getElementById("adminPanel").style.display = adminOn ? "block" : "none";
+    adminPanel.style.display = adminOn ? "block" : "none";
   }
 
-  function logout() {
-    localStorage.removeItem("loggedIn");
-    localStorage.removeItem("username");
-    window.location.href = "login.html";
+  function logout(){ localStorage.clear(); window.location.href="login.html"; }
+  function openProfile(){ alert("User: "+localStorage.getItem("username")); }
+  function voiceBook(){ alert("🎤 Voice booking activated (demo)"); }
+  function sos(){ alert("🚨 SOS Activated!"); }
+  function safetyMode(){ alert("🛡 Safety mode enabled"); }
+  function callDriver(){ alert("📞 Calling driver..."); }
+  function shareTrip(){ alert("📤 Trip shared"); }
+  function demoMode(){ alert("Demo mode on"); }
+
+  function showToast(msg){
+    const t = document.getElementById("toast");
+    t.innerText = msg;
+    t.classList.add("show");
+    setTimeout(()=>t.classList.remove("show"),2000);
   }
 
-  function openProfile() {
-    alert("👤 User: " + localStorage.getItem("username") + "\n⭐ Rating: 4.9\n🚕 Rides: " + totalRides);
+  function setSaved(place){ alert(place+" selected"); }
+
+  function applyPromo(){
+    if(promoCode.value==="AI50"){ promoDiscount=50; alert("₹50 discount applied"); }
+    else alert("Invalid code");
   }
 
-  function callDriver() {
-    alert("📞 Calling driver...");
+  function addMoney(){
+    walletBalance+=100;
+    walletBal.innerText = walletBalance;
+    showToast("₹100 added to wallet");
   }
 
-  function showToast(msg) {
-    const toast = document.getElementById("toast");
-    toast.innerText = msg;
-    toast.classList.add("show");
-    setTimeout(() => toast.classList.remove("show"), 2500);
+  function sendChat(){
+    if(chatMsg.value==="") return;
+    chatBox.innerHTML += "You: "+chatMsg.value+"<br>";
+    chatMsg.value="";
+    setTimeout(()=> chatBox.innerHTML+="Driver: On my way 🚗<br>",800);
   }
 
-  function demoMode() {
-    bookRide();
-  }
-
-  function initMap() {
-    map = L.map("map").setView([28.6139, 77.2090], 13);
+  function initMap(){
+    map = L.map("map").setView([28.6139,77.2090],13);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
 
-    map.on("click", function(e) {
-      if(!pickupLatLng) {
+    map.on("click",function(e){
+      if(!pickupLatLng){
         pickupLatLng = e.latlng;
-        pickupMarker = L.marker(pickupLatLng).addTo(map).bindPopup("📍 Pickup").openPopup();
-        pickupText.innerText = pickupLatLng.lat.toFixed(3) + ", " + pickupLatLng.lng.toFixed(3);
-      } else if(!dropLatLng) {
+        pickupMarker = L.marker(pickupLatLng).addTo(map).bindPopup("Pickup").openPopup();
+        pickupText.innerText = pickupLatLng.lat.toFixed(3)+", "+pickupLatLng.lng.toFixed(3);
+      } else if(!dropLatLng){
         dropLatLng = e.latlng;
-        dropMarker = L.marker(dropLatLng).addTo(map).bindPopup("🏁 Drop").openPopup();
-        dropText.innerText = dropLatLng.lat.toFixed(3) + ", " + dropLatLng.lng.toFixed(3);
-        L.polyline([pickupLatLng, dropLatLng], { color:"#2563eb", weight:4 }).addTo(map);
-        carMarker = L.marker(pickupLatLng).addTo(map).bindPopup("🚗 Driver");
+        dropMarker = L.marker(dropLatLng).addTo(map).bindPopup("Drop").openPopup();
+        dropText.innerText = dropLatLng.lat.toFixed(3)+", "+dropLatLng.lng.toFixed(3);
+        L.polyline([pickupLatLng,dropLatLng],{color:"blue"}).addTo(map);
+        carMarker = L.marker(pickupLatLng).addTo(map).bindPopup("Driver");
       }
     });
   }
-
   initMap();
 
-  function animateCar() {
-    if(!pickupLatLng || !dropLatLng) return;
-    let latStep = (dropLatLng.lat - pickupLatLng.lat) / 20;
-    let lngStep = (dropLatLng.lng - pickupLatLng.lng) / 20;
-    let i = 0;
-
-    const interval = setInterval(() => {
-      if(i >= 20) { clearInterval(interval); return; }
-      let lat = pickupLatLng.lat + latStep * i;
-      let lng = pickupLatLng.lng + lngStep * i;
-      carMarker.setLatLng([lat, lng]);
-      i++;
-    }, 500);
+  function bookRide(){
+    if(!pickupLatLng || !dropLatLng){ alert("Select pickup & drop"); return; }
+    paymentModal.style.display="flex";
   }
 
-  function bookRide() {
-    if(!pickupLatLng || !dropLatLng) {
-      alert("Please select pickup and drop on map");
-      return;
-    }
-    statusText.innerText = "Choose payment method...";
-    document.getElementById("paymentModal").style.display = "flex";
-  }
-
-  function pay(method) {
-    document.getElementById("paymentModal").style.display = "none";
-    showToast("Paid using " + method);
+  function pay(method){
+    paymentModal.style.display="none";
+    showToast("Paid via "+method);
     startRide();
   }
 
-  function startRide() {
-    statusText.innerText = "Driver assigned. On the way...";
-    timelineSteps.innerHTML = "• AI analyzing demand...";
-    setTimeout(()=>timelineSteps.innerHTML+="<br>• Optimizing route...",800);
-    setTimeout(()=>timelineSteps.innerHTML+="<br>• Driver selected...",1600);
+  function startRide(){
+    statusText.innerText="Ride started...";
+    let progress=0;
+
+    // AI timeline
+    timelineSteps.innerHTML="• Analyzing demand...";
+    setTimeout(()=>timelineSteps.innerHTML+="<br>• Selecting driver...",800);
+    setTimeout(()=>timelineSteps.innerHTML+="<br>• Optimizing route...",1600);
     setTimeout(()=>timelineSteps.innerHTML+="<br>• Ride started ✅",2400);
 
-    let fare = Math.floor(Math.random()*100)+100;
-    fareText.innerText = "₹ " + fare;
-    distanceText.innerText = (Math.random()*5+1).toFixed(2) + " km";
-    demandText.innerText = "High";
-    surgeText.innerHTML = '<span class="surge">Surge Active 🔺</span>';
+    // AI reasoning
+    aiBox.innerHTML="🤖 AI Reasoning:<br>• High demand area<br>• Closest driver selected<br>• Optimal pricing applied";
 
-    aiBox.innerHTML = "🤖 AI Reasoning:<br>• High demand area<br>• Closest driver selected<br>• Optimal pricing applied";
+    // Demand + surge
+    demandText.innerText="High";
+    surgeText.innerHTML='<span class="surge">Surge Active 🔺</span>';
 
+    // Fare & distance
+    const dist = (Math.random()*5+1).toFixed(2);
+    let fare = Math.floor(Math.random()*100)+100 - promoDiscount;
+    distanceText.innerText = dist+" km";
+    fareText.innerText = "₹ "+fare;
+
+    // ETA
     etaText.innerText = Math.floor(Math.random()*5)+2;
-    confidenceFill.style.width = (Math.floor(Math.random()*20)+70) + "%";
+
+    // Confidence
+    confidenceFill.style.width = (Math.floor(Math.random()*20)+70)+"%";
+
+    // Progress bar
+    const intv = setInterval(()=>{
+      progress+=10;
+      tripProgress.style.width = progress+"%";
+      if(progress>=100){
+        clearInterval(intv);
+        statusText.innerText="Ride completed ✔️";
+        ratingModal.style.display="flex";
+      }
+    },1000);
 
     animateCar();
 
+    // Stats
     totalRides++;
-    totalFare += fare;
+    totalFare+=fare;
+    totalRidesElem = document.getElementById("totalRides");
+    avgFareElem = document.getElementById("avgFare");
     totalRidesElem.innerText = totalRides;
-    avgFareElem.innerText = Math.round(totalFare / totalRides);
+    avgFareElem.innerText = Math.round(totalFare/totalRides);
 
-    history.unshift("Ride completed | ₹" + fare);
+    history.unshift("₹"+fare+" | "+dist+" km | Rahul Sharma");
+    history = history.slice(0,5);
     historyList.innerHTML = history.map(h=>"• "+h).join("<br>");
 
-    adminDemand.innerText = "High";
-    adminRides.innerText = totalRides;
-
-    setTimeout(()=> {
-      statusText.innerText = "Ride completed ✔️";
-      document.getElementById("ratingModal").style.display = "flex";
-    }, 12000);
+    adminDemand.innerText="High";
+    adminRides.innerText=totalRides;
   }
 
-  function rate(stars) {
-    document.getElementById("ratingModal").style.display = "none";
-    showToast("Thanks for rating " + stars + " stars ⭐");
+  function animateCar(){
+    let i=0;
+    const steps=20;
+    const latStep = (dropLatLng.lat - pickupLatLng.lat)/steps;
+    const lngStep = (dropLatLng.lng - pickupLatLng.lng)/steps;
+
+    const interval = setInterval(()=>{
+      if(i>=steps){ clearInterval(interval); return; }
+      carMarker.setLatLng([
+        pickupLatLng.lat + latStep*i,
+        pickupLatLng.lng + lngStep*i
+      ]);
+      i++;
+    },500);
+  }
+
+  function rate(stars){
+    ratingModal.style.display="none";
+    showToast("Thanks for rating "+stars+"⭐");
   }
 </script>
 
 </body>
 </html>
-
